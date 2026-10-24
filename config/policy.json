@@ -1,0 +1,17 @@
+{
+  "version": "reg-policy-2026.10.1",
+  "high_risk_threshold": 80,
+  "elevated_risk_threshold": 60,
+  "composite_review_threshold": 45,
+  "composite_reject_threshold": 70,
+  "high_risk_signals_to_reject": 2,
+  "hard_reject_reason_codes": ["DEVICE_LINKED_TO_MANY_ACCOUNTS"],
+  "required_signals": ["EMAIL", "IP", "DEVICE"],
+  "weights": {
+    "EMAIL": 0.25,
+    "IP": 0.25,
+    "DEVICE": 0.25,
+    "PHONE": 0.15,
+    "DEVICE_HISTORY": 0.10
+  }
+}

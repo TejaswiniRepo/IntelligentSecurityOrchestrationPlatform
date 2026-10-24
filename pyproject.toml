@@ -1,0 +1,28 @@
+[project]
+name = "isop"
+version = "0.1.0"
+description = "Intelligent Security Orchestration Platform - registration risk-check MVP"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi==0.156.8",
+    "uvicorn==0.54.0",
+    "pydantic[email]==2.14.1",
+    "mcp==2.3.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==9.1.1",
+    "httpx==0.28.1",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["isop*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
