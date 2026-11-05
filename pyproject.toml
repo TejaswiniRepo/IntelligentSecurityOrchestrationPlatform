@@ -1,19 +1,24 @@
 [project]
 name = "isop"
-version = "0.1.0"
-description = "Intelligent Security Orchestration Platform - registration risk-check MVP"
+version = "0.3.0"
+description = "Intelligent Security Orchestration Platform - registration risk check with a local-LLM investigation planner"
 requires-python = ">=3.11"
 dependencies = [
     "fastapi==0.156.8",
     "uvicorn==0.54.0",
     "pydantic[email]==2.14.1",
     "mcp==2.3.0",
+    "httpx==0.28.1",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest==9.1.1",
-    "httpx==0.28.1",
+    "anyio==4.15.1",
+]
+# Optional cloud providers. Not needed for the offline demo.
+cloud = [
+    "anthropic==2.3.0",
 ]
 
 [build-system]
@@ -23,6 +28,13 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.packages.find]
 include = ["isop*"]
 
+[tool.setuptools.package-data]
+isop = ["static/swagger/*", "static/ui/*", "static/ui/css/*", "static/ui/js/*"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
+markers = [
+    "ollama: needs a running local Ollama with the configured model (auto-skipped otherwise)",
+    "cloud: calls a paid cloud API (skipped unless ISOP_RUN_CLOUD_TESTS=1)",
+]

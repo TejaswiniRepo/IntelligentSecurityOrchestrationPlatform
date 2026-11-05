@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ISOP — Intelligent Security Orchestration Platform</title>
+  <link rel="icon" href="data:,">
+  <script src="js/theme.js"></script>
+  <link rel="stylesheet" href="css/app.css">
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar" aria-label="Main navigation">
+      <div class="brand">
+        <span class="brand-mark" id="brand-mark"></span>
+        <div>
+          <div class="brand-name">ISOP</div>
+          <div class="brand-sub">Security Orchestration</div>
+        </div>
+      </div>
+      <nav class="nav" id="nav"></nav>
+      <div class="sidebar-foot" id="sidebar-foot"></div>
+    </aside>
+
+    <div class="workspace">
+      <header class="topbar">
+        <div class="titles">
+          <h1>Intelligent Security Orchestration Platform</h1>
+          <p>AI-Powered Registration Security and Fraud Prevention</p>
+        </div>
+        <div class="topbar-right">
+          <div class="system-chips" id="system-chips" aria-live="polite"></div>
+          <div id="theme-slot"></div>
+          <label class="switch" id="panel-switch">
+            <input type="checkbox" id="panel-toggle" role="switch">
+            <span class="switch-track" aria-hidden="true"><span class="switch-thumb"></span></span>
+            <span class="switch-label">Show Intelligent Security Orchestration</span>
+          </label>
+        </div>
+      </header>
+      <main class="main" id="main" tabindex="-1"></main>
+    </div>
+  </div>
+  <div class="toast-host" id="toasts" aria-live="polite"></div>
+  <noscript>This dashboard needs JavaScript. The API remains available at /docs.</noscript>
+</body>
+</html>

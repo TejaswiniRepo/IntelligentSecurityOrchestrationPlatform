@@ -35,8 +35,12 @@ Dissertation project. Claude acts as principal software engineer, application se
 - Keep the user informed of blockers and significant design decisions.
 - Before calling work done, review it for correctness, security gaps, maintainability, and demo readiness.
 
-## Current MVP scope
-- `POST /register`, exercised via Swagger UI, triggers the flow.
-- Deterministic stub planner by default; a real LLM planner is enabled via env var.
+## Current scope (offline demo on 2026-11-18)
+- Dashboard at `/ui/` (vanilla ES modules, no build step, no CDN, strict CSP, text via `textContent` only) and Swagger at `/docs`. The UI submits `POST /register/check?mode=async` and follows persisted case events (SSE + polling fallback).
+- The orchestration toggle is visibility-only; investigations run as server-side tasks and never depend on a browser connection. Never fabricate progress events: every UI stage comes from a stored event.
+- **Runtime must never depend on Claude/Anthropic, Hugging Face or internet.** Default `LLM_PROVIDER=ollama` (local, `qwen2.5:3b`), `ISOP_OFFLINE=true`; `deterministic` needs no model. Cloud providers are optional and refused while offline.
+- Never add startup code that downloads packages or models; only `scripts/setup-online.ps1` may touch the network.
+- Planner output is always labelled (`llm` / `deterministic` / `deterministic_fallback`); never present fallback as LLM inference.
+- Policy owns completeness (R008): a skipped required follow-up yields REVIEW, never ALLOW.
 - All signals are simulated, behind adapters that can be swapped for real providers.
 - Reference only (for the later final implementation, not the MVP spec): the mid-semester report, `Intelligent_Security_Orchestration_Platform_Mid_Semester_Report.pdf`.

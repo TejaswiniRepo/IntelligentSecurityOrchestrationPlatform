@@ -54,7 +54,7 @@ VOIP_PREFIXES = ("+1555", "+4470")  # fictional / personal-number ranges
 PREMIUM_PREFIXES = ("+1900",)
 
 
-def phone_risk(phone: str, country: str) -> ProviderResult:
+def phone_risk(phone: str, country: str | None) -> ProviderResult:
     reasons: list[str] = []
     if phone.startswith(PREMIUM_PREFIXES):
         score, line_type, reasons = 90, "premium", ["PREMIUM_RATE_NUMBER"]
@@ -65,7 +65,9 @@ def phone_risk(phone: str, country: str) -> ProviderResult:
 
     phone_country = next((cc for code, cc in sorted(CALLING_CODES.items(), key=lambda kv: -len(kv[0]))
                           if phone.startswith(code)), "UNKNOWN")
-    if phone_country != country.upper():
+    if not country:
+        reasons.append("COUNTRY_NOT_SUPPLIED")  # mismatch rule cannot be evaluated
+    elif phone_country != country.upper():
         score = min(100, score + 20)
         reasons.append("PHONE_COUNTRY_MISMATCH")
 
@@ -155,4 +157,41 @@ def device_history(device_id: str) -> ProviderResult:
         source="mock.device_history",
         simulated=True,
         details={"linked_accounts": linked, "prior_rejections": rejected, "window_days": 90},
+    )
+
+
+# ----------------------------------------------------------------------- registration history
+
+# Synthetic history service: registrations seen in the last 24 h per IP /24 network, phone or email.
+IP_NETWORK_REGISTRATIONS: dict[str, int] = {"203.0.113.0/24": 2, "198.51.100.0/24": 9}
+PHONE_REGISTRATIONS: dict[str, int] = {"+15555550123": 2, "+15555550100": 7}
+EMAIL_REGISTRATIONS: dict[str, int] = {}
+
+
+def registration_history(entity_type: str, entity_value: str) -> ProviderResult:
+    if entity_type == "ip":
+        count = IP_NETWORK_REGISTRATIONS.get(str(ip_network(f"{entity_value}/24", strict=False)), 0)             if ip_address(entity_value).version == 4 else 0
+    elif entity_type == "phone":
+        count = PHONE_REGISTRATIONS.get(entity_value, 0)
+    elif entity_type == "email":
+        count = EMAIL_REGISTRATIONS.get(entity_value.lower(), 0)
+    else:
+        raise ValueError("unsupported entity_type")
+
+    if count >= 15:
+        score, reasons = 90, ["HIGH_REGISTRATION_VELOCITY"]
+    elif count >= 5:
+        score, reasons = 70, ["ELEVATED_REGISTRATION_VELOCITY"]
+    elif count >= 2:
+        score, reasons = 30, ["SOME_PRIOR_REGISTRATIONS"]
+    else:
+        score, reasons = 5, ["NO_PRIOR_REGISTRATIONS"]
+
+    return ProviderResult(
+        signal_type=SignalType.REGISTRATION_HISTORY,
+        risk_score=score,
+        reason_codes=reasons,
+        source="mock.registration_history",
+        simulated=True,
+        details={"entity_type": entity_type, "registrations_24h": count, "window_hours": 24},
     )

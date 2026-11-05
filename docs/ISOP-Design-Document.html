@@ -1,0 +1,596 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ISOP — Software Design Document</title>
+<style>
+  :root {
+    --ink: #172B4D; --quiet: #5E6C84; --line: #DFE1E6; --edge: #8993A4; --bg: #FFFFFF; --panel: #F4F5F7;
+    --blue: #0052CC; --blue-bg: #DEEBFF; --green: #006644; --green-bg: #E3FCEF; --yellow: #974F0C; --yellow-bg: #FFFAE6;
+    --red: #BF2600; --red-bg: #FFEBE6; --link: #0052CC;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink);
+    font: 14px/1.714 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+  a { color: var(--link); text-decoration: none; } a:hover { text-decoration: underline; }
+  code { font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace; font-size: 12px;
+    background: var(--panel); border-radius: 3px; padding: 1px 4px; }
+
+  /* top bar */
+  .topbar { position: sticky; top: 0; z-index: 5; height: 56px; display: flex; align-items: center; gap: 16px;
+    padding: 0 20px; background: #fff; border-bottom: 1px solid var(--line); }
+  .logo { width: 32px; height: 32px; border-radius: 4px; background: var(--blue); color: #fff; display: grid;
+    place-items: center; font-weight: 700; font-size: 12px; letter-spacing: .5px; }
+  .space-name { font-weight: 600; }
+  .topbar .spacer { flex: 1; }
+  .topbar .meta { color: var(--quiet); font-size: 12px; }
+
+  /* layout */
+  .layout { display: grid; grid-template-columns: 240px minmax(0, 1fr); min-height: calc(100vh - 56px); }
+  .sidebar { background: var(--panel); border-right: 1px solid var(--line); padding: 20px 16px; position: sticky;
+    top: 56px; height: calc(100vh - 56px); overflow: auto; }
+  .sidebar h4 { margin: 0 0 8px; font-size: 11px; text-transform: uppercase; letter-spacing: .6px; color: var(--quiet); }
+  .sidebar ol { list-style: none; margin: 0; padding: 0; }
+  .sidebar li a { display: block; padding: 4px 8px; border-radius: 3px; color: var(--ink); font-size: 13px; }
+  .sidebar li a:hover { background: #EBECF0; text-decoration: none; }
+  .main { padding: 24px 40px 80px; }
+  .page { max-width: 800px; margin: 0 auto; }
+
+  /* page header */
+  .breadcrumbs { font-size: 13px; color: var(--quiet); margin-bottom: 12px; }
+  .breadcrumbs span + span::before { content: " / "; color: var(--edge); }
+  h1.title { font-size: 28px; line-height: 1.25; font-weight: 600; margin: 0 0 8px; letter-spacing: -.2px; }
+  .byline { display: flex; align-items: center; gap: 10px; color: var(--quiet); font-size: 13px; margin-bottom: 24px; }
+  .avatar { width: 24px; height: 24px; border-radius: 50%; background: #6554C0; color: #fff; display: grid;
+    place-items: center; font-size: 11px; font-weight: 600; }
+
+  /* content */
+  h2 { font-size: 20px; font-weight: 600; margin: 40px 0 8px; padding-top: 8px; scroll-margin-top: 72px; }
+  h3 { font-size: 16px; font-weight: 600; margin: 24px 0 4px; }
+  p { margin: 8px 0; }
+  ul, ol.steps { margin: 8px 0; padding-left: 24px; } li { margin: 2px 0; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; font-size: 13px; }
+  th, td { border: 1px solid #C1C7D0; padding: 7px 10px; text-align: left; vertical-align: top; }
+  th { background: var(--panel); font-weight: 600; }
+  table.props th { width: 28%; }
+  .lozenge { display: inline-block; padding: 0 4px; border-radius: 3px; font-size: 11px; font-weight: 700;
+    line-height: 16px; text-transform: uppercase; vertical-align: 1px; }
+  .lz-blue { background: var(--blue-bg); color: #0747A6; } .lz-green { background: var(--green-bg); color: var(--green); }
+  .lz-yellow { background: var(--yellow-bg); color: var(--yellow); } .lz-red { background: var(--red-bg); color: var(--red); }
+  .lz-grey { background: #DFE1E6; color: #42526E; }
+
+  .panel { display: flex; gap: 12px; padding: 12px 16px; border-radius: 3px; margin: 16px 0; }
+  .panel .icon { flex: none; width: 20px; height: 20px; border-radius: 50%; color: #fff; display: grid;
+    place-items: center; font-size: 12px; font-weight: 700; margin-top: 2px; }
+  .panel-info { background: var(--blue-bg); } .panel-info .icon { background: var(--blue); }
+  .panel-note { background: var(--yellow-bg); } .panel-note .icon { background: #FF991F; }
+  .panel-success { background: var(--green-bg); } .panel-success .icon { background: #00875A; }
+  .panel p { margin: 0; }
+
+  .toc { border: 1px solid var(--line); border-radius: 3px; padding: 12px 16px; margin: 16px 0 8px; background: #FAFBFC; }
+  .toc strong { display: block; margin-bottom: 4px; }
+  .toc ol { margin: 0; padding-left: 20px; columns: 2; column-gap: 32px; }
+
+  figure { margin: 16px 0 8px; border: 1px solid var(--line); border-radius: 3px; padding: 12px; background: #fff; }
+  figure svg { width: 100%; height: auto; display: block;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+  figcaption { color: var(--quiet); font-size: 12px; text-align: center; margin-top: 8px; }
+
+  .code { border: 1px solid #C1C7D0; border-radius: 3px; margin: 12px 0; overflow: hidden; }
+  .code .hdr { background: var(--panel); border-bottom: 1px solid #C1C7D0; padding: 4px 10px; font-size: 12px;
+    color: var(--quiet); font-weight: 600; }
+  .code pre { margin: 0; padding: 10px 12px; overflow: auto; font: 12px/1.5 SFMono-Regular, Consolas, Menlo, monospace;
+    background: #FAFBFC; }
+  .tasks { list-style: none; padding-left: 4px; }
+  .tasks li::before { content: ""; display: inline-block; width: 12px; height: 12px; border: 1.5px solid var(--edge);
+    border-radius: 2px; margin-right: 8px; vertical-align: -1px; }
+  .footer { margin-top: 48px; padding-top: 12px; border-top: 1px solid var(--line); color: var(--quiet); font-size: 12px; }
+
+  @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } .sidebar { display: none; } .main { padding: 16px; }
+    .toc ol { columns: 1; } }
+  @media print { .topbar, .sidebar { display: none; } .layout { display: block; } .main { padding: 0; }
+    figure, table, .code { break-inside: avoid; } }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="logo">ISOP</div>
+  <div class="space-name">ISOP Dissertation</div>
+  <div class="spacer"></div>
+  <div class="meta">Offline copy · no sign-in required</div>
+</header>
+
+<div class="layout">
+  <nav class="sidebar" aria-label="On this page">
+    <h4>On this page</h4>
+    <ol>
+      <li><a href="#document-control">Document control</a></li>
+      <li><a href="#overview">Overview</a></li>
+      <li><a href="#architecture">Architecture</a></li>
+      <li><a href="#component-design">Component design</a></li>
+      <li><a href="#request-flow">Request flow</a></li>
+      <li><a href="#data-contracts">Data contracts</a></li>
+      <li><a href="#decision-policy">Decision policy</a></li>
+      <li><a href="#security">Security and privacy controls</a></li>
+      <li><a href="#resilience">Resilience and offline operation</a></li>
+      <li><a href="#testing">Testing and evaluation</a></li>
+      <li><a href="#runbook">Deployment and runbook</a></li>
+      <li><a href="#risks">Risks, limitations and next steps</a></li>
+    </ol>
+  </nav>
+
+  <main class="main">
+    <article class="page">
+      <div class="breadcrumbs"><span>ISOP Dissertation</span><span>Engineering</span><span>Design</span></div>
+      <h1 class="title">ISOP — Software Design Document</h1>
+      <div class="byline">
+        <div class="avatar">TP</div>
+        <span>Owned by <strong>Tejaswini Panjakadi</strong> · Last updated 24 Oct 2026</span>
+        <span class="lozenge lz-yellow">Draft</span>
+      </div>
+
+      <div class="panel panel-info"><div class="icon">i</div>
+        <p><strong>Summary.</strong> ISOP screens a user registration before the account is created. A local LLM chooses
+        which follow-up investigations to run; a deterministic, versioned policy returns
+        <span class="lozenge lz-green">Allow</span> <span class="lozenge lz-yellow">Review</span>
+        <span class="lozenge lz-red">Reject</span>. The whole system runs offline on one laptop.</p></div>
+
+      <div class="toc"><strong>Contents</strong>
+        <ol>
+          <li><a href="#document-control">Document control</a></li>
+          <li><a href="#overview">Overview</a></li>
+          <li><a href="#architecture">Architecture</a></li>
+          <li><a href="#component-design">Component design</a></li>
+          <li><a href="#request-flow">Request flow</a></li>
+          <li><a href="#data-contracts">Data contracts</a></li>
+          <li><a href="#decision-policy">Decision policy</a></li>
+          <li><a href="#security">Security and privacy controls</a></li>
+          <li><a href="#resilience">Resilience and offline operation</a></li>
+          <li><a href="#testing">Testing and evaluation</a></li>
+          <li><a href="#runbook">Deployment and runbook</a></li>
+          <li><a href="#risks">Risks, limitations and next steps</a></li>
+        </ol>
+      </div>
+
+      <!-- ================================================================== -->
+      <h2 id="document-control">Document control</h2>
+      <p>ISOP version 0.2.0 is code-complete and verified for an offline demo on <strong>18 Nov 2026</strong>.</p>
+      <table class="props">
+        <tr><th>Status</th><td><span class="lozenge lz-yellow">Draft</span> for supervisor review</td></tr>
+        <tr><th>Author</th><td>Tejaswini Panjakadi (BITS ID 2024TM93077)</td></tr>
+        <tr><th>Programme</th><td>M.Tech Software Engineering, BITS SEZG628T Dissertation</td></tr>
+        <tr><th>Software version</th><td>isop 0.2.0, policy <code>reg-policy-2026.11.1</code></td></tr>
+        <tr><th>Repository</th><td>TejaswiniRepo/IntelligentSecurityOrchestrationPlatform (GitHub)</td></tr>
+        <tr><th>Final report due</th><td>1 Nov 2026 (soft copy)</td></tr>
+        <tr><th>Related</th><td>Mid-semester report (Sept 2026), README.md, DEMO_CHECKLIST.md</td></tr>
+      </table>
+      <div class="panel panel-note"><div class="icon">!</div><p>Open question: who are the named reviewers (supervisor, examiner)?</p></div>
+
+      <!-- ================================================================== -->
+      <h2 id="overview">Overview</h2>
+      <p>ISOP screens a user registration before the account is created: an LLM chooses which follow-up investigations
+      to run, and a deterministic policy returns ALLOW, REVIEW or REJECT.</p>
+      <p><strong>Problem.</strong> Conventional fraud orchestration runs a fixed sequence of checks for every request.
+      Extending it means adding conditional logic for each new signal and relationship. ISOP tests whether an agent can
+      pick follow-up checks from the evidence while access decisions stay rule-based and auditable.</p>
+      <h3>Goals</h3>
+      <ul>
+        <li>Expose risk-signal checks as governed MCP tools with input validation and timeouts.</li>
+        <li>Let an LLM planner select follow-up tools from evidence, within an allowlist and a budget.</li>
+        <li>Keep the final decision in versioned, explainable policy code with reason codes.</li>
+        <li>Record a masked audit trace of every tool, signal, rule and decision.</li>
+        <li>Run fully offline on one laptop: local model, no cloud account, no internet.</li>
+      </ul>
+      <h3>Non-goals</h3>
+      <ul>
+        <li>The LLM never authorises, rejects or creates an account.</li>
+        <li>No real fraud vendors: all signals come from deterministic mock providers, labelled <code>simulated</code>.</li>
+        <li>No production deployment, authentication, rate limiting or account-recovery journey in this release.</li>
+      </ul>
+
+      <!-- ================================================================== -->
+      <h2 id="architecture">Architecture</h2>
+      <p>ISOP is one FastAPI process plus one MCP server subprocess and a local Ollama runtime; the planner advises, the
+      policy decides.</p>
+      <figure>
+<svg viewBox="0 0 760 768" role="img" aria-label="The LLM only plans; the deterministic policy decides" font-size="13">
+  <defs><marker id="arch-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#8993A4"/></marker></defs>
+  <text x="24" y="34" font-size="15" font-weight="600" fill="#172B4D">The LLM only plans; the deterministic policy decides</text>
+  <text x="24" y="54" font-size="11.5" fill="#5E6C84">ISOP 0.2.0 on one laptop, fully offline. The accent marks the only component that decides.</text>
+  <g fill="none" stroke="#8993A4" stroke-width="1.25">
+    <path d="M136 132V164" marker-end="url(#arch-arrow)"/>
+    <path d="M136 236V268" marker-end="url(#arch-arrow)"/>
+    <path d="M136 356V388" marker-end="url(#arch-arrow)"/>
+    <path d="M136 460V492" marker-end="url(#arch-arrow)"/>
+    <path d="M136 528V560" marker-end="url(#arch-arrow)"/>
+    <path d="M248 300H312" marker-start="url(#arch-arrow)" marker-end="url(#arch-arrow)"/>
+    <path d="M248 340H280V560H312" marker-start="url(#arch-arrow)" marker-end="url(#arch-arrow)"/>
+    <path d="M388 244V268" marker-end="url(#arch-arrow)"/>
+    <path d="M524 244V268" marker-end="url(#arch-arrow)"/>
+    <path d="M660 244V268" marker-end="url(#arch-arrow)"/>
+    <path d="M388 324V356" stroke-dasharray="4 4" marker-end="url(#arch-arrow)"/>
+    <path d="M524 612V628" marker-end="url(#arch-arrow)"/>
+  </g>
+  <g fill="none" stroke="#8993A4" stroke-width="1.25">
+    <rect x="24" y="76" width="224" height="56" rx="8"/>
+    <rect x="24" y="164" width="224" height="72" rx="8"/>
+    <rect x="24" y="268" width="224" height="88" rx="8"/>
+    <rect x="24" y="560" width="224" height="56" rx="8"/>
+    <rect x="312" y="152" width="424" height="276" rx="8"/>
+    <rect x="328" y="188" width="392" height="56" rx="8"/>
+    <rect x="328" y="268" width="120" height="56" rx="8"/>
+    <rect x="464" y="268" width="120" height="56" rx="8" stroke-dasharray="5 4"/>
+    <rect x="600" y="268" width="120" height="56" rx="8" stroke-dasharray="5 4"/>
+    <rect x="328" y="356" width="392" height="56" rx="8"/>
+    <rect x="312" y="460" width="424" height="240" rx="8"/>
+    <rect x="328" y="500" width="188" height="32" rx="8"/>
+    <rect x="532" y="500" width="188" height="32" rx="8"/>
+    <rect x="328" y="540" width="188" height="32" rx="8"/>
+    <rect x="532" y="540" width="188" height="32" rx="8"/>
+    <rect x="328" y="580" width="188" height="32" rx="8" fill="#F4F5F7"/>
+    <rect x="532" y="580" width="188" height="32" rx="8" fill="#F4F5F7"/>
+    <rect x="328" y="628" width="392" height="56" rx="8"/>
+  </g>
+  <rect x="24" y="388" width="224" height="72" rx="8" fill="#DEEBFF" stroke="#0052CC" stroke-width="2"/>
+  <rect x="24" y="492" width="69" height="36" rx="8" fill="#E3FCEF" stroke="#00875A" stroke-width="1.25"/>
+  <rect x="101" y="492" width="69" height="36" rx="8" fill="#FFFAE6" stroke="#FF991F" stroke-width="1.25"/>
+  <rect x="178" y="492" width="69" height="36" rx="8" fill="#FFEBE6" stroke="#DE350B" stroke-width="1.25"/>
+
+  <text x="36" y="100" font-weight="600" fill="#172B4D">Demo client</text>
+  <text x="36" y="116" font-size="11.5" fill="#5E6C84">Swagger UI (bundled) or curl</text>
+  <text x="36" y="188" font-weight="600" fill="#172B4D">FastAPI REST API</text>
+  <text x="36" y="204" font-size="11.5" fill="#5E6C84">POST /register/check</text>
+  <text x="36" y="220" font-size="11.5" fill="#5E6C84">validates input, drops password</text>
+  <text x="36" y="292" font-weight="600" fill="#172B4D">Registration orchestrator</text>
+  <text x="36" y="308" font-size="11.5" fill="#5E6C84">1. mandatory baseline checks</text>
+  <text x="36" y="324" font-size="11.5" fill="#5E6C84">2. planner loop, up to 3 turns</text>
+  <text x="36" y="340" font-size="11.5" fill="#5E6C84">binds arguments and budget</text>
+  <text x="36" y="412" font-weight="600" fill="#172B4D">Deterministic policy</text>
+  <text x="36" y="428" font-size="11.5" fill="#172B4D">rules R000 to R008, versioned</text>
+  <text x="36" y="444" font-size="11.5" fill="#172B4D">the only component that decides</text>
+  <text x="58.5" y="514" text-anchor="middle" font-size="12" font-weight="600" fill="#172B4D">ALLOW</text>
+  <text x="135.5" y="514" text-anchor="middle" font-size="12" font-weight="600" fill="#172B4D">REVIEW</text>
+  <text x="212.5" y="514" text-anchor="middle" font-size="12" font-weight="600" fill="#172B4D">REJECT</text>
+  <text x="36" y="584" font-weight="600" fill="#172B4D">Audit trail (SQLite)</text>
+  <text x="36" y="600" font-size="11.5" fill="#5E6C84">masked trace and JSON response</text>
+
+  <text x="328" y="176" font-weight="600" fill="#172B4D">Investigation planner, advises the orchestrator</text>
+  <text x="340" y="212" font-weight="600" fill="#172B4D">LLM planner</text>
+  <text x="340" y="228" font-size="11.5" fill="#5E6C84">sees sanitised signals, names allowlisted actions</text>
+  <text x="340" y="292" font-weight="600" fill="#172B4D">Ollama</text>
+  <text x="340" y="308" font-size="11.5" fill="#5E6C84">local, default</text>
+  <text x="476" y="292" font-weight="600" fill="#172B4D">Anthropic</text>
+  <text x="476" y="308" font-size="11.5" fill="#5E6C84">optional cloud</text>
+  <text x="612" y="292" font-weight="600" fill="#172B4D">Hugging Face</text>
+  <text x="612" y="308" font-size="11.5" fill="#5E6C84">optional cloud</text>
+  <text x="396" y="344" font-size="11.5" fill="#5E6C84">on failure or timeout</text>
+  <text x="340" y="380" font-weight="600" fill="#172B4D">Deterministic planner</text>
+  <text x="340" y="396" font-size="11.5" fill="#5E6C84">explicit rules; labelled fallback, never shown as LLM</text>
+
+  <text x="328" y="484" font-weight="600" fill="#172B4D">MCP server isop-signals, over stdio</text>
+  <text x="422" y="520" text-anchor="middle" font-size="11.5" fill="#172B4D">check_email_reputation</text>
+  <text x="626" y="520" text-anchor="middle" font-size="11.5" fill="#172B4D">check_phone_risk</text>
+  <text x="422" y="560" text-anchor="middle" font-size="11.5" fill="#172B4D">check_ip_risk</text>
+  <text x="626" y="560" text-anchor="middle" font-size="11.5" fill="#172B4D">check_device_risk</text>
+  <text x="422" y="600" text-anchor="middle" font-size="11.5" fill="#172B4D">check_device_history</text>
+  <text x="626" y="600" text-anchor="middle" font-size="11.5" fill="#172B4D">get_registration_history</text>
+  <text x="340" y="652" font-weight="600" fill="#172B4D">Deterministic mock providers</text>
+  <text x="340" y="668" font-size="11.5" fill="#5E6C84">every result simulated: true, source mock.*</text>
+
+  <text x="24" y="728" font-size="11.5" fill="#5E6C84">Dashed border: optional cloud provider, refused while ISOP_OFFLINE=true.</text>
+  <text x="24" y="744" font-size="11.5" fill="#5E6C84">Tinted tool: follow-up the planner may choose; the other four run on every request.</text>
+</svg>
+        <figcaption>Figure 1 · ISOP runtime architecture: request path, planner, MCP tools</figcaption>
+      </figure>
+      <p>The left column is the request path every registration takes. The orchestrator asks the planner which follow-up
+      checks to run and calls tools through the MCP client; only the policy turns the collected signals into a decision,
+      which is written to the audit trail and returned.</p>
+
+      <!-- ================================================================== -->
+      <h2 id="component-design">Component design</h2>
+      <p>Each module has one responsibility and a typed boundary; only <code>policy.py</code> produces a decision.</p>
+      <table>
+        <tr><th>Module</th><th>Responsibility</th><th>Key interface</th></tr>
+        <tr><td><code>api.py</code></td><td>FastAPI app, bundled Swagger UI, startup wiring, 422 handler that never echoes input</td><td><code>POST /register/check</code>, <code>GET /health</code>, <code>GET /audit</code>, <code>GET /audit/{id}</code></td></tr>
+        <tr><td><code>schemas.py</code></td><td>Pydantic contracts for request, signal, planner turn, policy result, audit trace</td><td><code>RegistrationCheckRequest</code>, <code>Signal</code>, <code>PlannerTurn</code>, <code>AuditTrace</code></td></tr>
+        <tr><td><code>orchestrator.py</code></td><td>Runs baseline checks, the bounded planner loop, policy and audit; binds tool arguments</td><td><code>InvestigationService.check(request)</code></td></tr>
+        <tr><td><code>planner.py</code></td><td>Chooses follow-up actions: <code>LlmPlanner</code> (model) or <code>DeterministicPlanner</code> (rules, also the fallback)</td><td><code>plan(evidence, ctx) -&gt; PlannerTurn</code></td></tr>
+        <tr><td><code>llm/</code></td><td>Provider layer: Ollama (default), Anthropic, Hugging Face; offline guard in the factory</td><td><code>complete_json(system, user, schema)</code>, <code>health()</code></td></tr>
+        <tr><td><code>tool_client.py</code></td><td>Long-lived MCP client session; validates tool output; maps errors and timeouts to non-success signals</td><td><code>call(tool, arguments) -&gt; Signal</code></td></tr>
+        <tr><td><code>mcp_server.py</code></td><td>MCP server <code>isop-signals</code> exposing six read-only tools; re-validates every argument</td><td>stdio transport, <code>python -m isop.mcp_server</code></td></tr>
+        <tr><td><code>providers.py</code></td><td>Deterministic mock signal providers, every result <code>simulated: true</code></td><td>one function per tool</td></tr>
+        <tr><td><code>policy.py</code></td><td>Versioned rules R000 to R008 loaded from <code>config/policy.json</code></td><td><code>PolicyEngine.evaluate(signals) -&gt; PolicyResult</code></td></tr>
+        <tr><td><code>audit.py</code></td><td>Masking helpers and SQLite audit store</td><td><code>AuditSink.record(trace)</code>, <code>get(id)</code>, <code>recent(n)</code></td></tr>
+        <tr><td><code>config.py</code></td><td>Settings from environment and <code>.env</code>, secrets hidden from repr</td><td><code>Settings.from_env()</code></td></tr>
+      </table>
+      <p><strong>MCP tools.</strong> Baseline: <code>check_email_reputation</code>, <code>check_phone_risk</code>,
+      <code>check_ip_risk</code>, <code>check_device_risk</code>. Follow-up: <code>check_device_history</code>,
+      <code>get_registration_history</code> (entity <code>ip</code>, <code>phone</code> or <code>email</code>).</p>
+
+      <!-- ================================================================== -->
+      <h2 id="request-flow">Request flow</h2>
+      <p>A registration check runs four baseline tools in parallel, then up to three planner turns, and only then asks the
+      policy for a decision.</p>
+      <figure>
+<svg viewBox="0 0 760 780" role="img" aria-label="A request takes up to three planning turns; the policy decides last" font-size="13">
+  <defs><marker id="seq-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#8993A4"/></marker></defs>
+  <text x="24" y="28" font-size="15" font-weight="600" fill="#172B4D">A request takes up to three planning turns; the policy decides last</text>
+  <text x="24" y="46" font-size="11.5" fill="#5E6C84">POST /register/check, top to bottom. Dashed arrows are replies.</text>
+  <g stroke="#C1C7D0" stroke-width="1.25" stroke-dasharray="4 4">
+    <line x1="72" x2="72" y1="108" y2="756"/><line x1="196" x2="196" y1="108" y2="756"/>
+    <line x1="320" x2="320" y1="108" y2="756"/><line x1="444" x2="444" y1="108" y2="756"/>
+    <line x1="568" x2="568" y1="108" y2="756"/><line x1="688" x2="688" y1="108" y2="756"/>
+  </g>
+  <g fill="#FFFFFF" stroke="#8993A4" stroke-width="1.25">
+    <rect x="24" y="60" width="96" height="48" rx="8"/><rect x="148" y="60" width="96" height="48" rx="8"/>
+    <rect x="272" y="60" width="96" height="48" rx="8"/><rect x="396" y="60" width="96" height="48" rx="8"/>
+    <rect x="520" y="60" width="96" height="48" rx="8"/>
+  </g>
+  <rect x="640" y="60" width="96" height="48" rx="8" fill="#DEEBFF" stroke="#0052CC" stroke-width="2"/>
+  <g text-anchor="middle">
+    <text x="72" y="80" font-weight="600" fill="#172B4D">Client</text><text x="72" y="96" font-size="11.5" fill="#5E6C84">Swagger / curl</text>
+    <text x="196" y="80" font-weight="600" fill="#172B4D">FastAPI</text><text x="196" y="96" font-size="11.5" fill="#5E6C84">REST API</text>
+    <text x="320" y="80" font-weight="600" fill="#172B4D">Orchestrator</text><text x="320" y="96" font-size="11.5" fill="#5E6C84">agent loop</text>
+    <text x="444" y="80" font-weight="600" fill="#172B4D">LLM planner</text><text x="444" y="96" font-size="11.5" fill="#5E6C84">Ollama, local</text>
+    <text x="568" y="80" font-weight="600" fill="#172B4D">MCP server</text><text x="568" y="96" font-size="11.5" fill="#5E6C84">isop-signals</text>
+    <text x="688" y="80" font-weight="600" fill="#172B4D">Policy</text><text x="688" y="96" font-size="11.5" fill="#172B4D">R000 to R008</text>
+  </g>
+  <rect x="292" y="332" width="316" height="216" rx="8" fill="none" stroke="#8993A4" stroke-width="1.25"/>
+  <rect x="292" y="332" width="124" height="20" rx="4" fill="#F4F5F7" stroke="#8993A4" stroke-width="1.25"/>
+  <text x="300" y="346" font-size="11" font-weight="600" fill="#172B4D">loop, up to 3 turns</text>
+  <rect x="452" y="352" width="108" height="56" rx="6" fill="#FFFAE6" stroke="#FF991F" stroke-width="1" stroke-dasharray="4 3"/>
+  <text font-size="11" fill="#5E6C84"><tspan x="460" y="368">Ollama down:</tspan><tspan x="460" y="382">rules planner</tspan><tspan x="460" y="396">takes the turn</tspan></text>
+  <g fill="none" stroke="#8993A4" stroke-width="1.25">
+    <path d="M72 148H194" marker-end="url(#seq-arrow)"/>
+    <path d="M196 168h22v20h-20" marker-end="url(#seq-arrow)"/>
+    <path d="M196 232H318" marker-end="url(#seq-arrow)"/>
+    <path d="M320 272H566" marker-end="url(#seq-arrow)"/>
+    <path d="M568 304H322" stroke-dasharray="5 4" marker-end="url(#seq-arrow)"/>
+    <path d="M320 384H442" marker-end="url(#seq-arrow)"/>
+    <path d="M444 412H322" stroke-dasharray="5 4" marker-end="url(#seq-arrow)"/>
+    <path d="M320 428h22v20h-20" marker-end="url(#seq-arrow)"/>
+    <path d="M320 488H566" marker-end="url(#seq-arrow)"/>
+    <path d="M568 520H322" stroke-dasharray="5 4" marker-end="url(#seq-arrow)"/>
+    <path d="M320 584H686" marker-end="url(#seq-arrow)"/>
+    <path d="M688 616H322" stroke-dasharray="5 4" marker-end="url(#seq-arrow)"/>
+    <path d="M320 636h22v20h-20" marker-end="url(#seq-arrow)"/>
+    <path d="M320 704H198" stroke-dasharray="5 4" marker-end="url(#seq-arrow)"/>
+    <path d="M196 736H74" stroke-dasharray="5 4" marker-end="url(#seq-arrow)"/>
+  </g>
+  <g font-size="11">
+    <text x="134" y="141" text-anchor="middle" fill="#172B4D">POST /register/check</text>
+    <text fill="#5E6C84"><tspan x="226" y="176">validate,</tspan><tspan x="226" y="189">drop password</tspan></text>
+    <text x="258" y="225" text-anchor="middle" fill="#172B4D">check(subject)</text>
+    <text x="328" y="265" fill="#172B4D">4 baseline checks</text>
+    <text x="560" y="297" text-anchor="end" fill="#5E6C84">baseline signals</text>
+    <text x="382" y="377" text-anchor="middle" fill="#172B4D">evidence, actions</text>
+    <text x="382" y="405" text-anchor="middle" fill="#5E6C84">steps, done</text>
+    <text x="348" y="442" fill="#5E6C84">validate steps</text>
+    <text x="328" y="481" fill="#172B4D">follow-up tools</text>
+    <text x="560" y="513" text-anchor="end" fill="#5E6C84">follow-up signals</text>
+    <text x="328" y="577" fill="#172B4D">evaluate all signals</text>
+    <text x="680" y="609" text-anchor="end" fill="#5E6C84">decision + rules fired</text>
+    <text x="348" y="650" fill="#5E6C84">audit to SQLite</text>
+    <text x="258" y="697" text-anchor="middle" fill="#5E6C84">decision + trace</text>
+    <text x="134" y="729" text-anchor="middle" fill="#5E6C84">200 JSON response</text>
+  </g>
+</svg>
+        <figcaption>Figure 2 · Sequence of POST /register/check: baseline, planner loop, policy, audit</figcaption>
+      </figure>
+      <ol class="steps">
+        <li>The client posts the registration; FastAPI validates every field and drops the password.</li>
+        <li>The orchestrator runs the four baseline MCP tools concurrently (phone only when supplied).</li>
+        <li>Each planner turn sends the LLM sanitised evidence and the actions still available; the model returns steps and
+          a done flag constrained by a JSON schema.</li>
+        <li>The orchestrator validates each step (allowlist, entity, duplicates, budget), binds the argument values itself and
+          calls the chosen follow-up tools.</li>
+        <li>The loop ends when the planner is done, no actions remain, the budget of 4 follow-ups is used, or 3 turns have
+          run. If Ollama fails, the rules planner takes that turn, labelled <code>deterministic_fallback</code>.</li>
+        <li>The policy evaluates all signals; the orchestrator writes the masked audit trace and returns the decision,
+          reason codes, <code>planner_mode</code> and trace.</li>
+      </ol>
+
+      <!-- ================================================================== -->
+      <h2 id="data-contracts">Data contracts</h2>
+      <p>All contracts are Pydantic models; unknown request fields are rejected with HTTP 422.</p>
+      <h3>Request — <code>POST /register/check</code></h3>
+      <div class="code"><div class="hdr">JSON</div><pre>{
+  "username": "farm_01",
+  "email": "carol88@outlook.com",
+  "password": "correct-horse-battery-staple",
+  "phone": "+14155550199",
+  "country": "US",
+  "ip_address": "198.51.100.20",
+  "device_id": "DEV-789"
+}</pre></div>
+      <table>
+        <tr><th>Field</th><th>Rule</th></tr>
+        <tr><td><code>username</code></td><td>3 to 32 characters, <code>[A-Za-z0-9_.-]</code></td></tr>
+        <tr><td><code>email</code></td><td>valid address</td></tr>
+        <tr><td><code>password</code></td><td>12 to 128 characters; discarded after validation</td></tr>
+        <tr><td><code>phone</code></td><td>optional, E.164; checked only when supplied</td></tr>
+        <tr><td><code>country</code></td><td>ISO 3166 alpha-2</td></tr>
+        <tr><td><code>ip_address</code></td><td>IPv4 or IPv6 as observed by the registration service</td></tr>
+        <tr><td><code>device_id</code></td><td>3 to 64 characters, <code>[A-Za-z0-9_-]</code></td></tr>
+      </table>
+      <h3>Normalised signal</h3>
+      <p>One per tool call; status is independent of risk.</p>
+      <div class="code"><div class="hdr">JSON</div><pre>{
+  "signal_type": "DEVICE_HISTORY",
+  "tool": "check_device_history",
+  "status": "SUCCESS",
+  "risk_score": 97,
+  "reason_codes": ["DEVICE_LINKED_TO_MANY_ACCOUNTS", "PRIOR_REJECTED_REGISTRATIONS"],
+  "source": "mock.device_history",
+  "simulated": true,
+  "details": {"linked_accounts": 17, "prior_rejections": 6, "window_days": 90},
+  "latency_ms": 4.9
+}</pre></div>
+      <h3>Planner turn</h3>
+      <p>Recorded for every planning iteration.</p>
+      <div class="code"><div class="hdr">JSON</div><pre>{
+  "iteration": 1,
+  "mode": "llm",
+  "provider": "ollama",
+  "model": "qwen2.5:3b",
+  "status": "ok",
+  "latency_ms": 7400,
+  "assessment": "IP is ELEVATED and DEVICE is MODERATE.",
+  "proposed": [{"tool": "check_device_history", "entity": null, "rationale": "device seen before"}],
+  "done": false
+}</pre></div>
+      <h3>Response (abridged)</h3>
+      <div class="code"><div class="hdr">JSON</div><pre>{
+  "correlation_id": "7f3c…",
+  "decision": "REJECT",
+  "reason_codes": ["DEVICE_LINKED_TO_MANY_ACCOUNTS", "HIGH_RISK_DEVICE_HISTORY", "ELEVATED_RISK_IP"],
+  "composite_score": 43.7,
+  "policy_version": "reg-policy-2026.11.1",
+  "simulated_signals": true,
+  "planner_mode": "llm",
+  "trace": {"investigation": {…}, "tools_invoked": […], "signals": […], "policy": {…}, "rejected_plan_steps": []}
+}</pre></div>
+      <p><code>planner_mode</code> is one of <code>llm</code>, <code>deterministic</code>, <code>deterministic_fallback</code>,
+      <code>mixed</code> or <code>none</code>, so rule-based output is never presented as model output.</p>
+
+      <!-- ================================================================== -->
+      <h2 id="decision-policy">Decision policy</h2>
+      <p>Every rule is evaluated on every request and the most severe outcome wins (REJECT over REVIEW over ALLOW);
+      thresholds live in <code>config/policy.json</code>, version <code>reg-policy-2026.11.1</code>.</p>
+      <table>
+        <tr><th>Rule</th><th>Outcome</th><th>Fires when</th></tr>
+        <tr><td><code>R001_REQUIRED_SIGNAL_UNAVAILABLE</code></td><td><span class="lozenge lz-yellow">Review</span></td><td>EMAIL, IP or DEVICE (and PHONE when supplied) did not return SUCCESS</td></tr>
+        <tr><td><code>R002_HARD_REJECT_INDICATOR</code></td><td><span class="lozenge lz-red">Reject</span></td><td>a configured hard-reject reason code is present, e.g. DEVICE_LINKED_TO_MANY_ACCOUNTS</td></tr>
+        <tr><td><code>R003_MULTIPLE_HIGH_RISK_SIGNALS</code></td><td><span class="lozenge lz-red">Reject</span></td><td>2 or more signals score 80 or higher</td></tr>
+        <tr><td><code>R004_SINGLE_HIGH_RISK_SIGNAL</code></td><td><span class="lozenge lz-yellow">Review</span></td><td>exactly 1 signal scores 80 or higher</td></tr>
+        <tr><td><code>R005_ELEVATED_RISK_SIGNAL</code></td><td><span class="lozenge lz-yellow">Review</span></td><td>any signal scores from 60 to 79</td></tr>
+        <tr><td><code>R006_COMPOSITE_RISK_CRITICAL</code></td><td><span class="lozenge lz-red">Reject</span></td><td>weighted composite score is 70 or higher</td></tr>
+        <tr><td><code>R007_COMPOSITE_RISK_ELEVATED</code></td><td><span class="lozenge lz-yellow">Review</span></td><td>weighted composite score is 45 or higher</td></tr>
+        <tr><td><code>R008_REQUIRED_FOLLOW_UP_MISSING</code></td><td><span class="lozenge lz-yellow">Review</span></td><td>device 40+ without device history, or IP / phone 60+ without registration history for that entity</td></tr>
+        <tr><td><code>R000_NO_RISK_INDICATORS</code></td><td><span class="lozenge lz-green">Allow</span></td><td>no other rule fired</td></tr>
+      </table>
+      <p>Composite weights: EMAIL 0.25, IP 0.25, DEVICE 0.25, PHONE 0.15, DEVICE_HISTORY 0.10, REGISTRATION_HISTORY 0.10,
+      averaged over successful signals only.</p>
+      <div class="panel panel-info"><div class="icon">i</div>
+        <p><strong>Why R008 exists.</strong> It makes the policy, not the planner, own investigation completeness. A model
+        that skips a needed check can cause a manual review, never an ALLOW on incomplete evidence. An inconsistent
+        configuration (for example elevated threshold at or above high) stops the service at startup.</p></div>
+
+      <!-- ================================================================== -->
+      <h2 id="security">Security and privacy controls</h2>
+      <p>The LLM is treated as untrusted: it can only name allowlisted actions, never supply values or decide.</p>
+      <table>
+        <tr><th>Threat</th><th>Control</th><th>Where</th></tr>
+        <tr><td>LLM issues or forces a decision</td><td>Decision comes only from <code>PolicyEngine</code>; extra fields such as <code>decision</code> in model output are discarded</td><td><code>policy.py</code>, <code>planner.py</code></td></tr>
+        <tr><td>LLM calls an unapproved tool</td><td>Output schema enum lists only remaining allowlisted actions; orchestrator re-checks allowlist, entity, duplicates and budget</td><td><code>planner.py</code>, <code>orchestrator.py</code></td></tr>
+        <tr><td>LLM injects argument values</td><td>Orchestrator binds email, phone, IP and device from the validated request</td><td><code>ARGUMENT_BINDINGS</code></td></tr>
+        <tr><td>Prompt injection via applicant data</td><td>The model never sees username, email, phone, IP or device ID</td><td><code>build_user_prompt</code></td></tr>
+        <tr><td>Prompt injection via tool output</td><td>Reason codes must match <code>^[A-Z0-9_]{1,64}$</code>; free-text details are dropped before prompting</td><td><code>ProviderResult</code>, <code>sanitize_signal</code></td></tr>
+        <tr><td>LLM skips a needed check</td><td>R008 routes the case to REVIEW</td><td><code>policy.py</code></td></tr>
+        <tr><td>Personal data in logs or audit</td><td>Password dropped after validation; audit stores <code>a***@gmail.com</code>, <code>/24</code> networks, masked phones, <code>sha256:</code> device pseudonyms</td><td><code>schemas.py</code>, <code>audit.py</code></td></tr>
+        <tr><td>Validation errors echo secrets</td><td>Custom 422 handler returns field, message and type only</td><td><code>api.py</code></td></tr>
+        <tr><td>Data leaves the machine</td><td><code>ISOP_OFFLINE=true</code> refuses cloud providers and non-loopback model URLs; Ollama client ignores proxy settings</td><td><code>llm/__init__.py</code>, <code>llm/ollama.py</code></td></tr>
+        <tr><td>Secrets exposure</td><td>Keys come from environment or <code>.env</code>, hidden from <code>Settings</code> repr; <code>.env.example</code> holds no values</td><td><code>config.py</code></td></tr>
+        <tr><td>MCP server trusted blindly</td><td>Server re-validates every argument and never echoes rejected input</td><td><code>mcp_server.py</code></td></tr>
+      </table>
+      <div class="panel panel-note"><div class="icon">!</div>
+        <p>Known gaps: no API authentication or rate limiting, and device pseudonyms are unsalted SHA-256.</p></div>
+
+      <!-- ================================================================== -->
+      <h2 id="resilience">Resilience and offline operation</h2>
+      <p>Every failure fails closed: a broken check or model can produce REVIEW or a labelled fallback, never a silent ALLOW.</p>
+      <table>
+        <tr><th>Failure</th><th>Behaviour</th><th>Verified</th></tr>
+        <tr><td>Ollama not running</td><td>Planner turn <code>deterministic_fallback</code>, status <code>error</code>; 30 s cooldown skips the model on later turns</td><td>Live: REJECT in 2.2 s, then LLM resumed after restart</td></tr>
+        <tr><td>Model not pulled</td><td>Same fallback; error names the fix <code>ollama pull qwen2.5:3b</code>; no automatic download</td><td>Live</td></tr>
+        <tr><td>Model timeout or malformed JSON</td><td>Same fallback, error recorded</td><td>Unit tests</td></tr>
+        <tr><td><code>LLM_FALLBACK=error</code></td><td>HTTP 503 with an explicit message</td><td>Integration test</td></tr>
+        <tr><td>MCP tool missing</td><td>Signal <code>ERROR</code>, R001 forces REVIEW; service still starts</td><td>Integration test</td></tr>
+        <tr><td>MCP tool slow</td><td>Signal <code>TIMEOUT</code> after <code>ISOP_TOOL_TIMEOUT_S</code> (3 s), REVIEW</td><td>Integration test</td></tr>
+        <tr><td>Planner crashes</td><td>Investigation stops; policy decides on gathered evidence</td><td>Integration test</td></tr>
+      </table>
+      <div class="panel panel-success"><div class="icon">✓</div>
+        <p><strong>Offline guarantees.</strong> The runtime needs no Claude login, API key, Hugging Face token or internet.
+        Ollama 0.40.10 runs CPU-only on 127.0.0.1 with <code>qwen2.5:3b</code> (1.9 GB). Swagger UI 5.34.0 is bundled. A socket
+        guard in the test suite fails any connection to a non-loopback address. Only <code>scripts/setup-online.ps1</code>
+        touches the network.</p></div>
+
+      <!-- ================================================================== -->
+      <h2 id="testing">Testing and evaluation</h2>
+      <p>The suite passed 96 tests with 2 optional cloud tests skipped on 24 Oct 2026, including real inference against the
+      local model.</p>
+      <table>
+        <tr><th>Suite</th><th>Covers</th><th>Result</th></tr>
+        <tr><td><code>tests/unit</code></td><td>Policy rule table incl. R008, LLM planner with a scripted fake model, Ollama and Hugging Face adapters on mocked HTTP, offline config</td><td><span class="lozenge lz-green">Passed</span></td></tr>
+        <tr><td><code>tests/integration</code></td><td>API scenarios, real MCP stdio server, broken MCP tools, LLM cannot force ALLOW or REJECT, Ollama down, 503 mode, socket guard, bundled Swagger</td><td><span class="lozenge lz-green">Passed</span></td></tr>
+        <tr><td><code>tests/integration/test_ollama_smoke.py</code></td><td>Real structured inference and end-to-end run with <code>qwen2.5:3b</code></td><td><span class="lozenge lz-green">Passed (2)</span></td></tr>
+        <tr><td><code>tests/cloud</code></td><td>Anthropic and Hugging Face smoke tests, paid and opt-in</td><td><span class="lozenge lz-grey">Skipped</span> no keys</td></tr>
+      </table>
+      <h3>Planner evaluation</h3>
+      <p><code>scripts/eval_planner.py</code>, 8 scenarios × 2 runs, LLM first turn against the rules planner, same policy.</p>
+      <table>
+        <tr><th>Metric</th><th>Result</th></tr>
+        <tr><td>Final decision agreement</td><td><strong>15 of 16</strong></td></tr>
+        <tr><td>Identical tool choices</td><td>8 of 16</td></tr>
+        <tr><td>Extra / missed follow-up calls</td><td>5 / 4</td></tr>
+        <tr><td>LLM latency per planning turn</td><td>median 7.2 s, max 11.0 s</td></tr>
+      </table>
+      <p>The one decision mismatch was conservative: the model skipped device history for a seen-before device and R008
+      returned REVIEW instead of ALLOW. Output is not fully repeatable on CPU even at temperature 0 with a fixed seed.</p>
+      <p><strong>Pre-demo verification.</strong> <code>scripts/verify-demo.ps1</code> passed all 13 checks against the real
+      model: ALLOW in 3.6 s, REVIEW in 12.4 s and 18.0 s, REJECT in 18.4 s.</p>
+
+      <!-- ================================================================== -->
+      <h2 id="runbook">Deployment and runbook</h2>
+      <p>The target is one Windows 11 laptop (i5-12500H, 15.6 GB RAM, no NVIDIA GPU); setup needs internet once, the demo
+      needs none.</p>
+      <h3>One-time setup (online)</h3>
+      <div class="code"><div class="hdr">PowerShell</div><pre>powershell -ExecutionPolicy Bypass -File scripts\setup-online.ps1</pre></div>
+      <p>This creates <code>.venv</code> from <code>requirements.txt</code>, caches wheels in <code>vendor\wheels</code>,
+      installs a CPU-only Ollama (35 MB downloaded instead of the 1.6 GB installer), verifies its Ollama Inc. signature,
+      pulls <code>qwen2.5:3b</code> and runs the tests.</p>
+      <h3>Demo day (offline)</h3>
+      <ol class="steps">
+        <li>Free port 8000, plug in mains power, close heavy apps (the model needs about 3 GB free RAM).</li>
+        <li>Terminal 1: <code>powershell -ExecutionPolicy Bypass -File scripts\start-demo.ps1</code> starts Ollama on
+          127.0.0.1 if needed, never pulls, then serves the API on 127.0.0.1:8000.</li>
+        <li>Terminal 2: <code>powershell -ExecutionPolicy Bypass -File scripts\verify-demo.ps1</code> prints PASS/FAIL for
+          API, MCP tools, policy, model, a warm-up inference and the ALLOW / REVIEW / REJECT cases.</li>
+        <li>Browser: <code>http://127.0.0.1:8000/docs</code>, then submit <code>examples/allow.json</code>,
+          <code>review_tor_ip.json</code> and <code>reject_device_farm.json</code>.</li>
+      </ol>
+      <p><strong>Fallback.</strong> <code>start-demo.ps1 -Deterministic</code> runs the full workflow with the rules planner,
+      labelled <code>deterministic</code>.</p>
+      <p><strong>Restore.</strong> <code>.venv</code> rebuilds offline from <code>vendor\wheels</code> (verified); Ollama and
+      the model restore from a copy of <code>%LOCALAPPDATA%\Programs\Ollama</code> and
+      <code>%USERPROFILE%\.ollama\models</code>.</p>
+
+      <!-- ================================================================== -->
+      <h2 id="risks">Risks, limitations and next steps</h2>
+      <p>The largest risk to the demo is CPU latency, not correctness: decisions stay policy-bound even when the model
+      chooses poorly.</p>
+      <table>
+        <tr><th>Risk or limitation</th><th>Impact</th><th>Mitigation or next step</th></tr>
+        <tr><td>CPU-only inference, 5 to 11 s per planning turn</td><td>Requests take up to about 20 s</td><td>Warm the model with <code>verify-demo.ps1</code>; narrate while it runs; <code>-Deterministic</code> if needed</td></tr>
+        <tr><td>3B model agrees on tool choice only 8 of 16 times</td><td>Extra calls or REVIEW instead of ALLOW</td><td>R008 bounds the impact; compare larger local models with <code>eval_planner.py --model</code></td></tr>
+        <tr><td>Low free RAM (about 2 GB at times)</td><td>Model load slows or fails, triggering fallback</td><td>Close heavy apps before the demo</td></tr>
+        <tr><td>Signals are simulated, scores uncalibrated</td><td>No claim of real fraud-detection accuracy</td><td>Integrate approved vendors behind the existing provider functions</td></tr>
+        <tr><td>No API authentication or rate limiting</td><td>Internal MVP only; <code>/audit</code> exposes masked traces</td><td>Add service-to-service auth before any shared deployment</td></tr>
+        <tr><td>Unsalted device pseudonyms</td><td>Low-entropy IDs could be re-identified</td><td>Switch to keyed HMAC with a managed secret</td></tr>
+        <tr><td>Cloud adapters tested on mocked HTTP only</td><td>Unknown behaviour against live services</td><td>Run <code>tests/cloud</code> with keys if used</td></tr>
+      </table>
+      <ul class="tasks">
+        <li>Commit and push the 0.2.0 changes to GitHub before the subscription ends on 1 Nov 2026</li>
+        <li>Extend the evaluation to a baseline comparison for the final report</li>
+        <li>Add the STEP-UP outcome and account-recovery journey described in the mid-semester report</li>
+      </ul>
+
+      <div class="footer">ISOP — Software Design Document · offline HTML copy · generated 24 Oct 2026 · opens without
+      sign-in or internet</div>
+    </article>
+  </main>
+</div>
+</body>
+</html>

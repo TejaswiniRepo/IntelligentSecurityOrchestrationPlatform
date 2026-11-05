@@ -17,6 +17,21 @@ from isop.schemas import Decision, PolicyResult, RuleHit, Signal, SignalStatus, 
 _SEVERITY = {Decision.ALLOW: 0, Decision.REVIEW: 1, Decision.REJECT: 2}
 
 
+class FollowUpRequirement(BaseModel):
+    """If `trigger` scored >= trigger_min_score, a successful `require` signal must exist (else REVIEW).
+
+    This makes the policy, not the planner, own investigation completeness: an LLM that skips a
+    needed check can only cause a manual review, never an ALLOW on incomplete evidence.
+    """
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    trigger: SignalType
+    trigger_min_score: int = Field(ge=0, le=100)
+    require: SignalType
+    require_entity: str | None = None
+
+
 class PolicyConfig(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
@@ -28,6 +43,7 @@ class PolicyConfig(BaseModel):
     high_risk_signals_to_reject: int = Field(ge=1)
     hard_reject_reason_codes: frozenset[str]
     required_signals: frozenset[SignalType]
+    follow_up_requirements: tuple[FollowUpRequirement, ...] = ()
     weights: dict[SignalType, float]
 
     @model_validator(mode="after")
@@ -102,6 +118,26 @@ class PolicyEngine:
                 rule_id="R005_ELEVATED_RISK_SIGNAL", outcome=Decision.REVIEW,
                 reason_codes=[f"ELEVATED_RISK_{s.signal_type.value}" for s in elevated],
                 detail=f"Signals in [{c.elevated_risk_threshold}, {c.high_risk_threshold})",
+            ))
+
+        # R008 investigation completeness: evidence that demands a follow-up must have one.
+        gaps = []
+        for req in c.follow_up_requirements:
+            trig = ok.get(req.trigger)
+            if trig is None or trig.risk_score < req.trigger_min_score:
+                continue
+            satisfied = any(
+                s.signal_type is req.require and s.status is SignalStatus.SUCCESS
+                and (req.require_entity is None or s.details.get("entity_type") == req.require_entity)
+                for s in signals
+            )
+            if not satisfied:
+                gaps.append(f"FOLLOW_UP_MISSING_{req.require.value}" + (f"_{req.require_entity.upper()}"
+                                                                        if req.require_entity else ""))
+        if gaps:
+            hits.append(RuleHit(
+                rule_id="R008_REQUIRED_FOLLOW_UP_MISSING", outcome=Decision.REVIEW, reason_codes=sorted(set(gaps)),
+                detail="Evidence required a follow-up investigation that did not complete",
             ))
 
         # R006 / R007 weighted composite across successful signals.

@@ -23,12 +23,24 @@ def replace(signals: list[Signal], new: Signal) -> list[Signal]:
     return [s for s in signals if s.signal_type is not new.signal_type] + [new]
 
 
+R008 = "R008_REQUIRED_FOLLOW_UP_MISSING"
+
+
+def hist(score: int, entity: str, *codes: str) -> Signal:
+    s = sig(SignalType.REGISTRATION_HISTORY, score, *codes)
+    return s.model_copy(update={"details": {"entity_type": entity}})
+
+
 CASES = [
     ("all clean", CLEAN, False, Decision.ALLOW, {"R000_NO_RISK_INDICATORS"}),
-    ("single high", replace(CLEAN, sig(SignalType.IP, 95)), False, Decision.REVIEW, {"R004_SINGLE_HIGH_RISK_SIGNAL"}),
-    ("elevated", replace(CLEAN, sig(SignalType.IP, 65)), False, Decision.REVIEW, {"R005_ELEVATED_RISK_SIGNAL"}),
-    ("two highs", replace(replace(CLEAN, sig(SignalType.IP, 95)), sig(SignalType.EMAIL, 90)), False,
-     Decision.REJECT, {"R003_MULTIPLE_HIGH_RISK_SIGNALS", "R007_COMPOSITE_RISK_ELEVATED"}),
+    ("single high, follow-up done", replace(CLEAN, sig(SignalType.IP, 95)) + [hist(30, "ip")], False,
+     Decision.REVIEW, {"R004_SINGLE_HIGH_RISK_SIGNAL"}),
+    ("single high, follow-up missing", replace(CLEAN, sig(SignalType.IP, 95)), False,
+     Decision.REVIEW, {"R004_SINGLE_HIGH_RISK_SIGNAL", R008}),
+    ("elevated", replace(CLEAN, sig(SignalType.IP, 65)) + [hist(5, "ip")], False,
+     Decision.REVIEW, {"R005_ELEVATED_RISK_SIGNAL"}),
+    ("two highs", replace(replace(CLEAN, sig(SignalType.IP, 95)), sig(SignalType.EMAIL, 90)) + [hist(5, "ip")],
+     False, Decision.REJECT, {"R003_MULTIPLE_HIGH_RISK_SIGNALS", "R007_COMPOSITE_RISK_ELEVATED"}),
     ("hard reject code", CLEAN + [sig(SignalType.DEVICE_HISTORY, 40, "DEVICE_LINKED_TO_MANY_ACCOUNTS")], False,
      Decision.REJECT, {"R002_HARD_REJECT_INDICATOR"}),
     ("required signal errored", replace(CLEAN, sig(SignalType.IP, None, status=SignalStatus.ERROR)), False,
@@ -37,7 +49,14 @@ CASES = [
      Decision.REVIEW, {"R001_REQUIRED_SIGNAL_UNAVAILABLE"}),
     ("phone supplied but missing", CLEAN, True, Decision.REVIEW, {"R001_REQUIRED_SIGNAL_UNAVAILABLE"}),
     ("no signals at all", [], False, Decision.REVIEW, {"R001_REQUIRED_SIGNAL_UNAVAILABLE"}),
-    ("composite critical", [sig(SignalType.EMAIL, 75), sig(SignalType.IP, 75), sig(SignalType.DEVICE, 75)], False,
+    ("seen-before device without history", replace(CLEAN, sig(SignalType.DEVICE, 55)), False,
+     Decision.REVIEW, {R008}),
+    ("seen-before device with clean history", replace(CLEAN, sig(SignalType.DEVICE, 55))
+     + [sig(SignalType.DEVICE_HISTORY, 5)], False, Decision.ALLOW, {"R000_NO_RISK_INDICATORS"}),
+    ("history for wrong entity does not satisfy", replace(CLEAN, sig(SignalType.IP, 65)) + [hist(5, "email")],
+     False, Decision.REVIEW, {"R005_ELEVATED_RISK_SIGNAL", R008}),
+    ("composite critical", [sig(SignalType.EMAIL, 75), sig(SignalType.IP, 75), sig(SignalType.DEVICE, 75),
+                            sig(SignalType.DEVICE_HISTORY, 75), hist(75, "ip")], False,
      Decision.REJECT, {"R005_ELEVATED_RISK_SIGNAL", "R006_COMPOSITE_RISK_CRITICAL"}),
     ("composite elevated", [sig(SignalType.EMAIL, 55), sig(SignalType.IP, 55), sig(SignalType.DEVICE, 30)], False,
      Decision.REVIEW, {"R007_COMPOSITE_RISK_ELEVATED"}),
@@ -49,7 +68,14 @@ def test_policy_table(name: str, signals: list[Signal], phone: bool, decision: D
     result = ENGINE.evaluate(signals, phone_provided=phone)
     assert result.decision is decision
     assert {h.rule_id for h in result.rules_fired} == expected_rules
-    assert result.reason_codes and result.policy_version == "reg-policy-2026.10.1"
+    assert result.reason_codes and result.policy_version == ENGINE.config.version
+
+
+def test_failed_follow_up_does_not_satisfy_requirement() -> None:
+    failed = sig(SignalType.DEVICE_HISTORY, None, status=SignalStatus.ERROR)
+    result = ENGINE.evaluate(replace(CLEAN, sig(SignalType.DEVICE, 55)) + [failed], phone_provided=False)
+    assert result.decision is Decision.REVIEW
+    assert "FOLLOW_UP_MISSING_DEVICE_HISTORY" in result.reason_codes
 
 
 def test_failed_signal_is_not_scored_as_low_risk() -> None:

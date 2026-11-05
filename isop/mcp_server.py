@@ -58,8 +58,8 @@ def check_email_reputation(email: str) -> dict[str, Any]:
 @server.tool(description="Phone risk: line type (mobile/VoIP/premium) and country consistency.")
 def check_phone_risk(phone: str, country: str) -> dict[str, Any]:
     _require(bool(E164.fullmatch(phone)), "phone")
-    _require(len(country) == 2 and country.isalpha(), "country")
-    return providers.phone_risk(phone, country).model_dump(mode="json")
+    _require(country == "" or (len(country) == 2 and country.isalpha()), "country")  # "" = not supplied
+    return providers.phone_risk(phone, country or None).model_dump(mode="json")
 
 
 @server.tool(description="IP risk: Tor exit, hosting/proxy, residential classification.")
@@ -78,6 +78,18 @@ def check_device_risk(device_id: str) -> dict[str, Any]:
 def check_device_history(device_id: str) -> dict[str, Any]:
     _require(bool(DEVICE_ID.fullmatch(device_id)), "device_id")
     return providers.device_history(device_id).model_dump(mode="json")
+
+
+@server.tool(description="Follow-up: registrations in the last 24 h sharing this IP network, phone or email.")
+def get_registration_history(entity_type: str, entity_value: str) -> dict[str, Any]:
+    validators = {
+        "ip": _valid_ip,
+        "phone": lambda v: bool(E164.fullmatch(v)),
+        "email": _valid_email,
+    }
+    _require(entity_type in validators, "entity_type")
+    _require(validators[entity_type](entity_value), "entity_value")
+    return providers.registration_history(entity_type, entity_value).model_dump(mode="json")
 
 
 if __name__ == "__main__":

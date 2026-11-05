@@ -1,5 +1,5 @@
 {
-  "version": "reg-policy-2026.10.1",
+  "version": "reg-policy-2026.11.1",
   "high_risk_threshold": 80,
   "elevated_risk_threshold": 60,
   "composite_review_threshold": 45,
@@ -7,11 +7,17 @@
   "high_risk_signals_to_reject": 2,
   "hard_reject_reason_codes": ["DEVICE_LINKED_TO_MANY_ACCOUNTS"],
   "required_signals": ["EMAIL", "IP", "DEVICE"],
+  "follow_up_requirements": [
+    {"trigger": "DEVICE", "trigger_min_score": 40, "require": "DEVICE_HISTORY"},
+    {"trigger": "IP", "trigger_min_score": 60, "require": "REGISTRATION_HISTORY", "require_entity": "ip"},
+    {"trigger": "PHONE", "trigger_min_score": 60, "require": "REGISTRATION_HISTORY", "require_entity": "phone"}
+  ],
   "weights": {
     "EMAIL": 0.25,
     "IP": 0.25,
     "DEVICE": 0.25,
     "PHONE": 0.15,
-    "DEVICE_HISTORY": 0.10
+    "DEVICE_HISTORY": 0.10,
+    "REGISTRATION_HISTORY": 0.10
   }
 }

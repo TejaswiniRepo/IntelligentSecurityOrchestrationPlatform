@@ -10,7 +10,7 @@ import asyncio
 import logging
 import sys
 import time
-from typing import Protocol
+from typing import Any, Protocol
 
 from mcp import Client
 from mcp.client.stdio import StdioServerParameters
@@ -27,6 +27,7 @@ TOOL_SIGNAL_TYPE: dict[str, SignalType] = {
     "check_ip_risk": SignalType.IP,
     "check_device_risk": SignalType.DEVICE,
     "check_device_history": SignalType.DEVICE_HISTORY,
+    "get_registration_history": SignalType.REGISTRATION_HISTORY,
 }
 
 
@@ -39,25 +40,29 @@ class ToolClient(Protocol):
 class McpToolClient:
     """Long-lived MCP session to the isop-signals server (stdio subprocess or in-process)."""
 
-    def __init__(self, transport: str, timeout_s: float) -> None:
+    def __init__(self, transport: str, timeout_s: float, inprocess_server: Any = None) -> None:
         if transport not in ("stdio", "inprocess"):
             raise ValueError(f"Unsupported ISOP_TOOL_TRANSPORT={transport!r}")
         self.transport = transport
         self.timeout_s = timeout_s
+        self._inprocess_server = inprocess_server
         self._client: Client | None = None
+        self.available_tools: frozenset[str] = frozenset()
 
     async def __aenter__(self) -> McpToolClient:
         if self.transport == "stdio":
             target = StdioServerParameters(command=sys.executable, args=["-m", "isop.mcp_server"], cwd=str(ROOT))
         else:
-            from isop.mcp_server import server as target  # in-memory MCP, used by tests
+            from isop.mcp_server import server  # in-memory MCP, used by tests
+            target = self._inprocess_server or server
         self._client = Client(target)
         await self._client.__aenter__()
-        tools = {t.name for t in (await self._client.list_tools()).tools}
-        missing = set(TOOL_SIGNAL_TYPE) - tools
+        self.available_tools = frozenset(t.name for t in (await self._client.list_tools()).tools)
+        missing = set(TOOL_SIGNAL_TYPE) - self.available_tools
         if missing:
-            raise RuntimeError(f"MCP server is missing tools: {sorted(missing)}")
-        log.info("mcp connected transport=%s tools=%s", self.transport, sorted(tools))
+            # Keep serving: calls to these tools fail closed (ERROR -> REVIEW) instead of blocking the demo.
+            log.error("mcp server is missing tools=%s; affected checks will fail closed", sorted(missing))
+        log.info("mcp connected transport=%s tools=%s", self.transport, sorted(self.available_tools))
         return self
 
     async def __aexit__(self, *exc: object) -> None:
@@ -77,6 +82,8 @@ class McpToolClient:
             return Signal(signal_type=expected, tool=tool, status=status, source="unavailable",
                           simulated=False, latency_ms=ms, error=error)
 
+        if tool not in self.available_tools:
+            return failed(SignalStatus.ERROR, "tool not available on MCP server")
         try:
             result = await asyncio.wait_for(self._client.call_tool(tool, arguments), timeout=self.timeout_s)
         except TimeoutError:

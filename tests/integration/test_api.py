@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sqlite3
 from pathlib import Path
 
 import pytest
@@ -17,7 +18,7 @@ def check(client: TestClient, **overrides: object) -> dict:
 
 
 def tools_called(body: dict) -> list[str]:
-    return [t["tool"] for t in body["trace"]["tools_invoked"]]
+    return [t["tool"] + (f":{t['entity']}" if t["entity"] else "") for t in body["trace"]["tools_invoked"]]
 
 
 def rules(body: dict) -> set[str]:
@@ -34,6 +35,7 @@ def test_normal_registration_is_allowed(client: TestClient) -> None:
     assert body["simulated_signals"] is True
     assert all(s["simulated"] and s["source"].startswith("mock.") for s in body["trace"]["signals"])
     assert body["trace"]["tool_transport"] == "mcp/inprocess"
+    assert body["planner_mode"] == "deterministic"
 
 
 def test_phone_is_optional_and_not_checked_when_absent(client: TestClient) -> None:
@@ -47,15 +49,20 @@ def test_tor_exit_ip_goes_to_review_with_corroborating_follow_up(client: TestCli
     assert body["decision"] == "REVIEW"
     assert "HIGH_RISK_IP" in body["reason_codes"]
     follow_ups = [t for t in body["trace"]["tools_invoked"] if t["phase"] == "follow_up"]
-    assert [t["tool"] for t in follow_ups] == ["check_device_history"]
-    assert "Conflicting evidence" in follow_ups[0]["rationale"]
+    assert [(t["tool"], t["entity"]) for t in follow_ups] == [
+        ("get_registration_history", "ip"), ("check_device_history", None),
+    ]
+    assert "Conflicting evidence" in follow_ups[1]["rationale"]
+    assert {t["requested_by"] for t in follow_ups} == {"deterministic"}
 
 
 def test_hosting_proxy_ip_goes_to_review(client: TestClient) -> None:
     body = check(client, ip_address="198.51.100.20")
     assert body["decision"] == "REVIEW"
     assert rules(body) == {"R005_ELEVATED_RISK_SIGNAL"}
-    assert body["reason_codes"] == ["ELEVATED_RISK_IP"]
+    # The follow-up found elevated registration velocity from the same /24 network.
+    assert body["reason_codes"] == ["ELEVATED_RISK_IP", "ELEVATED_RISK_REGISTRATION_HISTORY"]
+    assert "get_registration_history:ip" in tools_called(body)
 
 
 def test_disposable_email_alone_is_review_not_reject(client: TestClient) -> None:
@@ -91,7 +98,8 @@ def test_multiple_conflicting_signals_route_to_review(client: TestClient) -> Non
     assert body["decision"] == "REVIEW"
     assert {"R004_SINGLE_HIGH_RISK_SIGNAL", "R005_ELEVATED_RISK_SIGNAL"} <= rules(body)
     assert {"HIGH_RISK_PHONE", "ELEVATED_RISK_IP"} <= set(body["reason_codes"])
-    assert "check_device_history" in tools_called(body)
+    assert {"check_device_history", "get_registration_history:ip", "get_registration_history:phone"} <= set(
+        tools_called(body))
 
 
 def test_same_input_gives_same_decision(client: TestClient) -> None:
@@ -129,18 +137,34 @@ def test_validation_error_never_echoes_password(client: TestClient) -> None:
     assert "tiny-secret" not in r.text
 
 
-def test_audit_trace_is_retrievable_and_free_of_sensitive_data(client: TestClient, audit_path: Path) -> None:
+def test_audit_trace_is_retrievable_and_free_of_sensitive_data(client: TestClient, tmp_path: Path) -> None:
     body = check(client, device_id="DEV-789")
     r = client.get(f"/audit/{body['correlation_id']}")
     assert r.status_code == 200
-    assert r.json()["decision"] == "REJECT"
+    trace = r.json()
+    assert trace["decision"] == "REJECT"
+    assert [t["tool"] for t in trace["tools_invoked"]][-1] == "check_device_history"
+    assert "R002_HARD_REJECT_INDICATOR" in {h["rule_id"] for h in trace["policy"]["rules_fired"]}
 
-    written = audit_path.read_text(encoding="utf-8")
-    assert body["correlation_id"] in written
+    listing = client.get("/audit?limit=5").json()
+    assert listing[0]["correlation_id"] == body["correlation_id"]
+    assert "check_device_history" in listing[0]["tools_invoked"]
+
+    with sqlite3.connect(tmp_path / "audit.db") as db:
+        stored = "\n".join(row[0] for row in db.execute("SELECT trace_json FROM audit_trace"))
+    assert body["correlation_id"] in stored
     for raw in (BASE_PAYLOAD["password"], BASE_PAYLOAD["email"], BASE_PAYLOAD["phone"], "192.0.2.10", "DEV-789"):
-        assert raw not in written, f"raw value leaked into audit log: {raw}"
-    assert "a***@gmail.com" in written and "192.0.2.0/24" in written
+        assert raw not in stored, f"raw value leaked into audit store: {raw}"
+    assert "a***@gmail.com" in stored and "192.0.2.0/24" in stored
 
 
 def test_unknown_audit_id_is_404(client: TestClient) -> None:
     assert client.get("/audit/does-not-exist").status_code == 404
+
+
+def test_swagger_ui_is_served_without_any_cdn(client: TestClient) -> None:
+    html = client.get("/docs").text
+    assert "/static/swagger/swagger-ui-bundle.js" in html
+    assert "cdn.jsdelivr" not in html and "unpkg" not in html
+    js = client.get("/static/swagger/swagger-ui-bundle.js")
+    assert js.status_code == 200 and len(js.content) > 1_000_000
