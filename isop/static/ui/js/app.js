@@ -6,6 +6,7 @@ import {
   changed, followSystemTheme, loadHealth, loadScenarios, refreshList, setActive, setPanel, setScenarios, setTheme,
   startBackgroundRefresh, state, subscribe, toggleExpanded, track,
 } from "./store.js";
+import { prettyModel } from "./model.js";
 import { activeStrip, historyTable, orchestrationPanel } from "./views.js";
 
 const NAV = [
@@ -87,9 +88,9 @@ function renderChrome(route) {
     if (p === "deterministic") { llmText = "Planner: deterministic rules"; llmTone = "neutral"; }
     else if (p === "ollama") {
       const ready = hl.llm.reachable && hl.llm.model_present;
-      llmText = `LLM: Ollama · ${hl.config.model}${ready ? "" : hl.llm.reachable ? " · model missing" : " · offline"}`;
+      llmText = `LLM: Ollama · ${prettyModel(hl.config.model)}${ready ? "" : hl.llm.reachable ? " · model missing" : " · offline"}`;
       llmTone = ready ? "good" : "warn";
-    } else { llmText = `LLM: ${p} · ${hl.config.model}`; llmTone = "neutral"; }
+    } else { llmText = `LLM: ${p} · ${prettyModel(hl.config.model)}`; llmTone = "neutral"; }
   }
   put(chips, h("div", { class: "chips-row" },
     h("span", { class: ["chip", `chip-${llmTone}`], title: hl && hl.config.llm_provider === "ollama" && !(hl.llm.reachable && hl.llm.model_present) ? "Investigations use the labelled deterministic fallback" : "" }, h("span", { class: "chip-dot" }), llmText),

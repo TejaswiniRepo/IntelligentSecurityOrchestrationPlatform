@@ -141,3 +141,32 @@ async def test_ollama_timeout_is_a_hard_deadline() -> None:
     with pytest.raises(LlmError) as e:
         await p.complete_json("s", "u", SCHEMA)
     assert e.value.kind == "timeout" and time.monotonic() - started < 1.5
+
+
+def test_default_model_is_the_official_hugging_face_gguf(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("OLLAMA_MODEL", raising=False)
+    s = Settings.from_env(env_file=None)
+    assert s.ollama_model == "hf.co/Qwen/Qwen2.5-3B-Instruct-GGUF:Q4_K_M"
+    summary = s.public_summary()
+    assert summary["model_source"] == "Hugging Face Hub (run locally)"
+    assert s.offline and summary["llm_provider"] == "ollama"  # still local inference, no cloud call
+
+
+def test_model_source_labels() -> None:
+    from isop.config import model_source
+
+    assert model_source("hf.co/Qwen/Qwen2.5-3B-Instruct-GGUF:Q4_K_M").startswith("Hugging Face Hub")
+    assert model_source("qwen2.5:3b").startswith("Ollama library")
+    assert Settings(llm_provider="deterministic").public_summary()["model_source"] is None
+
+
+async def test_health_reports_hugging_face_source() -> None:
+    hf = "hf.co/Qwen/Qwen2.5-3B-Instruct-GGUF:Q4_K_M"
+
+    def handler(req: httpx.Request) -> httpx.Response:
+        if req.url.path == "/api/version":
+            return httpx.Response(200, json={"version": "0.40.10"})
+        return httpx.Response(200, json={"models": [{"name": hf, "model": hf}]})
+
+    h = await OllamaProvider("http://127.0.0.1:11434", hf, transport=httpx.MockTransport(handler)).health()
+    assert h["model_present"] and h["model_source"] == "Hugging Face Hub (run locally)"

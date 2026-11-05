@@ -46,7 +46,7 @@ if ($Deterministic) {
         $m = Select-String -LiteralPath $envFile -Pattern '^OLLAMA_MODEL=(.+)$' | Select-Object -First 1
         if ($m) { $model = $m.Matches[0].Groups[1].Value.Trim() }
     }
-    if (-not $model) { $model = "qwen2.5:3b" }
+    if (-not $model) { $model = "hf.co/Qwen/Qwen2.5-3B-Instruct-GGUF:Q4_K_M" }
     if (-not $running) {
         Write-Host "WARNING: Ollama not running - API will use deterministic_fallback (clearly labelled)." -ForegroundColor Yellow
     } else {

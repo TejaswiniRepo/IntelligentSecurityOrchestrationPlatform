@@ -51,6 +51,16 @@ export const TOOL_LABELS = {
   get_registration_history: "Registration history",
 };
 
+/**
+ * Readable model name. "hf.co/Qwen/Qwen2.5-3B-Instruct-GGUF:Q4_K_M" → "Qwen2.5-3B-Instruct (Q4_K_M) · Hugging Face".
+ * @param {string|null|undefined} model
+ */
+export function prettyModel(model) {
+  if (!model) return "";
+  const m = /^(?:hf\.co|huggingface\.co)\/[^/]+\/([^:]+?)(?:-GGUF)?(?::(.+))?$/i.exec(model);
+  return m ? `${m[1]}${m[2] ? ` (${m[2]})` : ""} · Hugging Face` : model;
+}
+
 /** @param {string} tool @param {string|null} [entity] */
 export function toolLabel(tool, entity) {
   const base = /** @type {Record<string,string>} */ (TOOL_LABELS)[tool] || tool;
@@ -127,7 +137,7 @@ export function deriveCase(events, caseStatus) {
         break;
       case "context.prepared":
         context = d;
-        end("context", "completed", e.ts, `Planner: ${d.planner_provider}${d.planner_model ? ` · ${d.planner_model}` : ""}`);
+        end("context", "completed", e.ts, `Planner: ${d.planner_provider}${d.planner_model ? ` · ${prettyModel(d.planner_model)}` : ""}`);
         say(e, "Context prepared: identifiers masked; the planner receives risk signals only, never raw identifiers.");
         break;
       case "baseline.started":
@@ -160,7 +170,7 @@ export function deriveCase(events, caseStatus) {
           available: d.available_actions || [], mode: null, llmStatus: null, latencyMs: null, proposed: [], assessment: null, error: null, done: false });
         say(e, d.provider === "deterministic"
           ? `Rules planner evaluating ${d.evidence_signals} signals (turn ${d.iteration}; no LLM in this mode).`
-          : `AI agent is evaluating ${d.evidence_signals} signals with ${d.provider}${d.model ? ` · ${d.model}` : ""} (turn ${d.iteration}).`);
+          : `AI agent is evaluating ${d.evidence_signals} signals with ${d.provider}${d.model ? ` · ${prettyModel(d.model)}` : ""} (turn ${d.iteration}).`);
         break;
       case "planner.completed": {
         const t = turns.find((x) => x.iteration === d.iteration && !x.endedAt) || turns[turns.length - 1];

@@ -38,9 +38,9 @@ Dissertation project. Claude acts as principal software engineer, application se
 ## Current scope (offline demo on 2026-11-18)
 - Dashboard at `/ui/` (vanilla ES modules, no build step, no CDN, strict CSP, text via `textContent` only) and Swagger at `/docs`. The UI submits `POST /register/check?mode=async` and follows persisted case events (SSE + polling fallback).
 - The orchestration toggle is visibility-only; investigations run as server-side tasks and never depend on a browser connection. Never fabricate progress events: every UI stage comes from a stored event.
-- **Runtime must never depend on Claude/Anthropic, Hugging Face or internet.** Default `LLM_PROVIDER=ollama` (local, `qwen2.5:3b`), `ISOP_OFFLINE=true`; `deterministic` needs no model. Cloud providers are optional and refused while offline.
+- **Runtime must never depend on Claude/Anthropic, Hugging Face or internet.** Default `LLM_PROVIDER=ollama` (local; model `hf.co/Qwen/Qwen2.5-3B-Instruct-GGUF:Q4_K_M` from the Hugging Face Hub, per supervisor; `qwen2.5:3b` as backup), `ISOP_OFFLINE=true`; `deterministic` needs no model. Cloud providers are optional and refused while offline.
 - Never add startup code that downloads packages or models; only `scripts/setup-online.ps1` may touch the network.
 - Planner output is always labelled (`llm` / `deterministic` / `deterministic_fallback`); never present fallback as LLM inference.
 - Policy owns completeness (R008): a skipped required follow-up yields REVIEW, never ALLOW.
-- All signals are simulated, behind adapters that can be swapped for real providers.
+- All signals are simulated, behind adapters that can be swapped for real providers. Never use an LLM to generate risk signals (it would invent evidence).
 - Reference only (for the later final implementation, not the MVP spec): the mid-semester report, `Intelligent_Security_Orchestration_Platform_Mid_Semester_Report.pdf`.

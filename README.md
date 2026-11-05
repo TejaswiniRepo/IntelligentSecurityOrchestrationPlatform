@@ -10,8 +10,14 @@ policy** returns `ALLOW`, `REVIEW` or `REJECT` with reason codes and a full audi
 > tools to run next.
 
 The running application does **not** depend on Claude Desktop, Claude Code, a Claude login, an Anthropic API
-key, Hugging Face, or the internet. Anthropic and Hugging Face adapters exist only as optional comparison
-providers.
+key, a Hugging Face account, or the internet. The planner model is the **official Qwen2.5-3B-Instruct GGUF from the
+Hugging Face Hub**, downloaded once and run locally by Ollama. Anthropic and Hugging Face *cloud* adapters exist only
+as optional comparison providers.
+
+**Two different things, deliberately:** the *LLM* (local, real inference) only plans which checks to run; the *risk
+signals* (email, phone, IP, device) come from deterministic **simulated** providers. An LLM is not used to produce
+risk signals: it has no threat-intelligence data, so it would invent scores, and the policy would then be deciding
+on fabricated evidence.
 
 **Dashboard:** http://127.0.0.1:8000/ (redirects to `/ui/`): a registration form, a live **Intelligent Security
 Orchestration** panel (shown or hidden with a toggle that never affects the investigation), a dedicated
@@ -108,9 +114,10 @@ and follow-up requirements are configuration; an inconsistent config fails at st
 | item | value |
 |---|---|
 | Runtime | Ollama **0.40.10**, CPU backend only (`%LOCALAPPDATA%\Programs\Ollama`, 77 MB) |
-| Model | **`qwen2.5:3b`** (Q4_K_M, 1.9 GB) — `OLLAMA_MODEL` in `.env` |
-| Why this model | Machine: i5-12500H, 15.6 GB RAM, Intel Iris Xe (no CUDA), ~7 GB free disk. A 3B model fits RAM and disk and runs on CPU; 7B+ would not. Qwen2.5 follows JSON schemas well and has no slow "thinking" mode. |
-| Smaller fallback | `qwen2.5:1.5b` (986 MB) — set `OLLAMA_MODEL=qwen2.5:1.5b` after `ollama pull qwen2.5:1.5b` |
+| Model | **`hf.co/Qwen/Qwen2.5-3B-Instruct-GGUF:Q4_K_M`** — the official [Qwen/Qwen2.5-3B-Instruct-GGUF](https://huggingface.co/Qwen/Qwen2.5-3B-Instruct-GGUF) repository on the Hugging Face Hub (file `qwen2.5-3b-instruct-q4_k_m.gguf`, 1.96 GB), pulled by Ollama and run locally. Set with `OLLAMA_MODEL` in `.env`. |
+| Licence | Qwen Research License (research and non-commercial use; suitable for this dissertation). Same licence and model family as the Ollama-library build used before. |
+| Why this model | Machine: i5-12500H, 15.6 GB RAM, Intel Iris Xe (no CUDA). A 3B model fits RAM and disk and runs on CPU; 7B+ would not. Qwen2.5 follows JSON schemas well and has no slow "thinking" mode. |
+| Alternative | `qwen2.5:3b` from the Ollama library (same family; kept installed as a backup): set `OLLAMA_MODEL=qwen2.5:3b` |
 | Interface | `POST http://127.0.0.1:11434/api/chat` with `format=<JSON schema>` (grammar-constrained structured output), `temperature=0`, fixed `seed` |
 | Offline guard | `ISOP_OFFLINE=true` (default) refuses cloud providers and any non-loopback `OLLAMA_BASE_URL`; the app never calls `/api/pull` |
 
@@ -135,8 +142,8 @@ py -3.12 -m venv .venv
 .venv\Scripts\python -m pip download -r requirements.txt -d vendor\wheels --only-binary=:all:   # offline reinstall cache
 .venv\Scripts\python scripts\install_ollama_cpu.py          # or: winget install Ollama.Ollama
 $env:OLLAMA_HOST="127.0.0.1:11434"; & "$env:LOCALAPPDATA\Programs\Ollama\ollama.exe" serve   # separate terminal
-& "$env:LOCALAPPDATA\Programs\Ollama\ollama.exe" pull qwen2.5:3b
-& "$env:LOCALAPPDATA\Programs\Ollama\ollama.exe" run qwen2.5:3b "Reply with OK"              # verify inference
+& "$env:LOCALAPPDATA\Programs\Ollama\ollama.exe" pull hf.co/Qwen/Qwen2.5-3B-Instruct-GGUF:Q4_K_M      # from the Hugging Face Hub
+& "$env:LOCALAPPDATA\Programs\Ollama\ollama.exe" run hf.co/Qwen/Qwen2.5-3B-Instruct-GGUF:Q4_K_M "Reply with OK"   # verify
 Copy-Item .env.example .env
 ```
 
@@ -227,6 +234,19 @@ Optional cloud providers (need `ISOP_OFFLINE=false`, internet, and credentials):
 Neither cloud adapter has been exercised against the live service in this project (no credentials were
 used); they are covered by mocked tests only.
 
+## Hugging Face model vs Ollama-library model (2026-11-05, same laptop, same day)
+
+`scripts\eval_planner.py --runs 2` on both builds of Qwen2.5-3B-Instruct (8 scenarios × 2 runs, same policy):
+
+| model | final-decision agreement | tool-choice agreement | extra / missed calls | latency per turn (median / max) |
+|---|---|---|---|---|
+| **`hf.co/Qwen/Qwen2.5-3B-Instruct-GGUF:Q4_K_M`** (default) | **16/16** | **9/16** | 4 / 4 | **6.2 s** / 9.9 s |
+| `qwen2.5:3b` (Ollama library) | 14/16 | 5/16 | 10 / 6 | 7.8 s / 19.5 s |
+
+With the Hugging Face model, `verify-demo.ps1` passed all 15 checks in LLM mode (requests 3–15 s) and the full test
+suite passed (121 passed, 2 optional cloud tests skipped). Both are builds of the same model, and 16 runs are a small
+sample, so read this as "at least as good", not a definitive ranking.
+
 ## Measured on this laptop (2026-10-24, CPU only, `qwen2.5:3b`)
 
 `scripts\verify-demo.ps1` (real model, MCP over stdio): all 13 checks passed. Requests took 3.6 s (ALLOW, one LLM
@@ -259,7 +279,7 @@ See **[DEMO_CHECKLIST.md](DEMO_CHECKLIST.md)** for the 18 November 2026 checklis
 |---|---|---|
 | `.venv` | `py -3.12 -m venv .venv; .venv\Scripts\python -m pip install --no-index --find-links vendor\wheels -r requirements.txt setuptools wheel; .venv\Scripts\python -m pip install --no-index -e . --no-deps --no-build-isolation` (verified: fresh venv from the cache passed the full suite) | `scripts\setup-online.ps1` |
 | Ollama runtime | copy back `%LOCALAPPDATA%\Programs\Ollama` from backup | `python scripts\install_ollama_cpu.py` |
-| model | copy back `%USERPROFILE%\.ollama\models` from backup | `ollama pull qwen2.5:3b` |
+| model | copy back `%USERPROFILE%\.ollama\models` from backup | `ollama pull hf.co/Qwen/Qwen2.5-3B-Instruct-GGUF:Q4_K_M` |
 
 Portability: verified only on this Windows 11 laptop. A different computer needs Python 3.12 and the downloads
 above **in advance**; it has not been tested elsewhere.

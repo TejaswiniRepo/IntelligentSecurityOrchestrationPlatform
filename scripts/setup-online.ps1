@@ -4,15 +4,17 @@
 
   1. Creates .venv and installs pinned Python packages (and caches wheels in vendor\wheels for offline reinstall)
   2. Installs a CPU-only Ollama runtime if Ollama is not already installed, and verifies its signature
-  3. Starts Ollama on 127.0.0.1 and pulls the configured model
+  3. Starts Ollama on 127.0.0.1 and pulls the configured model from the Hugging Face Hub
+     (official Qwen/Qwen2.5-3B-Instruct-GGUF, Q4_K_M, ~2 GB, Qwen Research License)
   4. Runs the offline test suite
 
 .EXAMPLE
   powershell -ExecutionPolicy Bypass -File scripts\setup-online.ps1
-  powershell -ExecutionPolicy Bypass -File scripts\setup-online.ps1 -Model qwen2.5:1.5b
+  # Alternative: the same model family from the Ollama library
+  powershell -ExecutionPolicy Bypass -File scripts\setup-online.ps1 -Model qwen2.5:3b
 #>
 param(
-    [string]$Model = "qwen2.5:3b",
+    [string]$Model = "hf.co/Qwen/Qwen2.5-3B-Instruct-GGUF:Q4_K_M",
     [string]$Python = "py -3.12"
 )
 $ErrorActionPreference = "Stop"

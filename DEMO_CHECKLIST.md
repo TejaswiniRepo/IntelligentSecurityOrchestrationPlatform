@@ -6,7 +6,7 @@ Claude Desktop / Claude Code is only the development tool; the app never calls i
 ## Before the demo day (online, once) — done on 2026-10-24, repeat only if something was removed
 
 - [ ] `powershell -ExecutionPolicy Bypass -File scripts\setup-online.ps1` completed without errors
-- [ ] `ollama list` shows `qwen2.5:3b`
+- [ ] `ollama list` shows `hf.co/Qwen/Qwen2.5-3B-Instruct-GGUF:Q4_K_M` (the Hugging Face model; `qwen2.5:3b` is the backup)
 - [ ] `.venv\Scripts\python -m pytest` → all pass (Ollama smoke tests run when Ollama is up)
 - [ ] Optional safety copy on a USB stick: the project folder, `%USERPROFILE%\.ollama\models`,
       `%LOCALAPPDATA%\Programs\Ollama`, and `vendor\wheels`
@@ -19,12 +19,16 @@ Claude Desktop / Claude Code is only the development tool; the app never calls i
 - [ ] Close heavy apps (browsers with many tabs, Teams, IDE indexing) — the 3B model needs ~3 GB free RAM
 - [ ] **Turn Wi-Fi off** to prove the offline claim (optional but convincing)
 - [ ] Terminal 1: `powershell -ExecutionPolicy Bypass -File scripts\start-demo.ps1`
-      → prints "Planner: LLM via Ollama, model qwen2.5:3b (present)"
+      → prints "Planner: LLM via Ollama, model hf.co/Qwen/Qwen2.5-3B-Instruct-GGUF:Q4_K_M (present)"
 - [ ] Terminal 2: `powershell -ExecutionPolicy Bypass -File scripts\verify-demo.ps1`
       → "All checks passed - ready to present." (this also warms the model so the first live request is fast)
 - [ ] Browser: http://127.0.0.1:8000/ (the dashboard) and, in a second tab, http://127.0.0.1:8000/docs.
       All UI assets are bundled, so both work with Wi-Fi off. Use a full-width window: the live panel sits beside
       the form above 1100 px and below it on narrower screens.
+
+> **If asked "is the AI real?"** — yes: the planner is genuine local inference with an open model from the
+> Hugging Face Hub (Qwen2.5-3B-Instruct). The risk *signals* are simulated demo data on purpose: an LLM has no
+> threat-intelligence data and would invent scores.
 
 ## Live demo script (≈ 10 minutes; each LLM-planned request takes ~4–20 s on this CPU — narrate while it runs)
 
@@ -32,7 +36,7 @@ Claude Desktop / Claude Code is only the development tool; the app never calls i
 2. **Presentation setup** — click **Demo scenarios · Hide** to collapse the scenario cards so the audience sees a
    plain registration form (click **Show** to reopen; the choice is remembered). Use the **Dark mode / Light mode**
    button in the header to suit the projector; the theme is remembered too.
-   **Dashboard tour** — header chips show `LLM: Ollama · qwen2.5:3b`, `Offline mode`, `MCP tools: 6`, the policy
+   **Dashboard tour** — header chips show `LLM: Ollama · Qwen2.5-3B-Instruct (Q4_K_M) · Hugging Face`, `Offline mode`, `MCP tools: 6`, the policy
    version. Switch **Show Intelligent Security Orchestration** on.
 3. **ALLOW** — click the *Normal registration* scenario card (prefills the form), then **Register & Verify
    Security**. Watch the stages turn blue then green, the four baseline tool chips fill with scores, and the AI
@@ -57,9 +61,9 @@ Claude Desktop / Claude Code is only the development tool; the app never calls i
 
 | Symptom | Fix |
 |---|---|
-| `start-demo.ps1`: "model not pulled" | Needs internet once: `ollama pull qwen2.5:3b`. Otherwise demo in fallback mode (still correct decisions). |
+| `start-demo.ps1`: "model not pulled" | Needs internet once: `ollama pull hf.co/Qwen/Qwen2.5-3B-Instruct-GGUF:Q4_K_M`; or set `OLLAMA_MODEL=qwen2.5:3b` (backup, already installed). Otherwise demo in fallback mode (still correct decisions). |
 | First request very slow (> 60 s) | Model was cold or RAM is short. Run `verify-demo.ps1` again; close apps; or `-Deterministic`. |
-| Requests show `deterministic_fallback` with `timeout` | RAM is short (seen once: a call took 137 s with 4 GB free). Close apps and re-run `verify-demo.ps1`; or raise `LLM_TIMEOUT_S` in `.env`; or `OLLAMA_MODEL=qwen2.5:1.5b` (if pulled). |
+| Requests show `deterministic_fallback` with `timeout` | RAM is short (seen once: a call took 137 s with 4 GB free). Close apps and re-run `verify-demo.ps1`; or raise `LLM_TIMEOUT_S` in `.env`; or a smaller model (pull it in advance). |
 | Dashboard looks out of date after an update | Hard refresh (Ctrl+F5) once; the server now sends `Cache-Control: no-cache` so this should not recur. |
 | Port 8000 busy | `scripts\start-demo.ps1 -Port 8001` and `verify-demo.ps1 -Api http://127.0.0.1:8001` |
 | Everything LLM-related fails | `scripts\start-demo.ps1 -Deterministic` — full workflow, clearly labelled deterministic. |

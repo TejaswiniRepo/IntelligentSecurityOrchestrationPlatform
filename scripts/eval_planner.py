@@ -71,7 +71,7 @@ def run_follow_ups(case: dict[str, str | None], steps: list[PlannedStep]) -> lis
 
 async def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--model", default=os.getenv("OLLAMA_MODEL", "qwen2.5:3b"))
+    ap.add_argument("--model", default=os.getenv("OLLAMA_MODEL", Settings().ollama_model))
     ap.add_argument("--runs", type=int, default=1)
     args = ap.parse_args()
 

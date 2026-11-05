@@ -1,0 +1,204 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1410 990" width="1410" height="990" role="img" aria-label="ISOP technical architecture" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif">
+<title>ISOP technical architecture</title>
+<defs>
+  <marker id="tech-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#8a97ab"/></marker>
+  <marker id="tech-b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#2563eb"/></marker>
+</defs>
+<rect width="1410" height="990" fill="#ffffff"/>
+<text x="20" y="38" font-size="19" font-weight="700" fill="#0f172a" text-anchor="start">ISOP technical architecture (v0.3.0): components, interfaces and controls</text>
+<text x="20" y="60" font-size="12.5" font-weight="400" fill="#475569" text-anchor="start">One laptop, 127.0.0.1 only. The LLM can only name allowlisted follow-up actions; the policy engine alone produces ALLOW / REVIEW / REJECT.</text>
+<rect x="12" y="80" width="1386" height="160" rx="10" fill="#f3f6fa" stroke="#dfe5ee"/>
+<text x="26" y="106" font-size="13.5" font-weight="700" fill="#0f172a" text-anchor="start">Client</text>
+<text x="26" y="127" font-size="11" font-weight="400" fill="#475569" text-anchor="start">Browser (Chrome)</text>
+<text x="26" y="142" font-size="11" font-weight="400" fill="#475569" text-anchor="start">same origin only</text>
+<rect x="12" y="256" width="1386" height="168" rx="10" fill="#fafbfd" stroke="#dfe5ee"/>
+<text x="26" y="282" font-size="13.5" font-weight="700" fill="#0f172a" text-anchor="start">API &amp; case</text>
+<text x="26" y="299" font-size="13.5" font-weight="700" fill="#0f172a" text-anchor="start">runtime</text>
+<text x="26" y="320" font-size="11" font-weight="400" fill="#475569" text-anchor="start">FastAPI 0.156</text>
+<text x="26" y="335" font-size="11" font-weight="400" fill="#475569" text-anchor="start">Uvicorn 0.54</text>
+<text x="26" y="350" font-size="11" font-weight="400" fill="#475569" text-anchor="start">Python 3.12</text>
+<rect x="12" y="440" width="1386" height="182" rx="10" fill="#f3f6fa" stroke="#dfe5ee"/>
+<text x="26" y="466" font-size="13.5" font-weight="700" fill="#0f172a" text-anchor="start">Orchestration &amp;</text>
+<text x="26" y="483" font-size="13.5" font-weight="700" fill="#0f172a" text-anchor="start">AI planning</text>
+<text x="26" y="504" font-size="11" font-weight="400" fill="#475569" text-anchor="start">asyncio</text>
+<text x="26" y="519" font-size="11" font-weight="400" fill="#475569" text-anchor="start">local LLM</text>
+<rect x="12" y="638" width="1386" height="174" rx="10" fill="#fafbfd" stroke="#dfe5ee"/>
+<text x="26" y="664" font-size="13.5" font-weight="700" fill="#0f172a" text-anchor="start">Tools, decision</text>
+<text x="26" y="681" font-size="13.5" font-weight="700" fill="#0f172a" text-anchor="start">&amp; audit</text>
+<text x="26" y="702" font-size="11" font-weight="400" fill="#475569" text-anchor="start">MCP 2.3 · stdio</text>
+<text x="26" y="717" font-size="11" font-weight="400" fill="#475569" text-anchor="start">policy as config</text>
+<rect x="12" y="828" width="1386" height="120" rx="10" fill="#f3f6fa" stroke="#dfe5ee"/>
+<text x="26" y="854" font-size="13.5" font-weight="700" fill="#0f172a" text-anchor="start">Storage &amp;</text>
+<text x="26" y="871" font-size="13.5" font-weight="700" fill="#0f172a" text-anchor="start">configuration</text>
+<text x="26" y="892" font-size="11" font-weight="400" fill="#475569" text-anchor="start">SQLite (WAL)</text>
+<text x="26" y="907" font-size="11" font-weight="400" fill="#475569" text-anchor="start">.env / env vars</text>
+<rect x="170" y="96" width="582" height="128" rx="9" fill="#ffffff" stroke="#334155" stroke-width="1.4"/>
+<text x="182" y="118" font-size="13.5" font-weight="650" fill="#0f172a" text-anchor="start">Registration dashboard  (/ui/)</text>
+<text x="182" y="138.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">HTML + CSS + vanilla ES modules · no build step, no CDN · strict CSP, text via textContent only</text>
+<text x="182" y="153.5" font-size="11" font-weight="400" fill="#475569" text-anchor="start">app.js routing &amp; toggles · form.js validation &amp; Idempotency-Key · views.js + morph() keyed DOM diff</text>
+<text x="182" y="169.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">store.js: per-case tracking, EventSource (SSE) with Last-Event-ID, 1 s polling fallback</text>
+<text x="182" y="184.5" font-size="11" font-weight="400" fill="#475569" text-anchor="start">model.js: persisted events → stage status, timings, evidence (never fabricated progress)</text>
+<text x="182" y="200.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">theme.js light/dark · orchestration panel toggle is visibility-only</text>
+<rect x="798" y="96" width="268" height="128" rx="9" fill="#ffffff" stroke="#334155" stroke-width="1.4"/>
+<text x="810" y="118" font-size="13.5" font-weight="650" fill="#0f172a" text-anchor="start">Swagger UI  (/docs)</text>
+<text x="810" y="138.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">Swagger UI 5.34.0, bundled assets</text>
+<text x="810" y="153.5" font-size="11" font-weight="400" fill="#475569" text-anchor="start">OpenAPI schema generated by FastAPI</text>
+<text x="810" y="169.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">Calls the same REST API</text>
+<rect x="1112" y="96" width="268" height="128" rx="9" fill="#ffffff" stroke="#9aa6b8" stroke-width="1.25"/>
+<text x="1124" y="118" font-size="13.5" font-weight="650" fill="#0f172a" text-anchor="start">Demo &amp; operations scripts</text>
+<text x="1124" y="138.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">setup-online.ps1 (the only network use)</text>
+<text x="1124" y="153.5" font-size="11" font-weight="400" fill="#475569" text-anchor="start">start-demo.ps1 · verify-demo.ps1 (15 checks)</text>
+<text x="1124" y="169.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">install_ollama_cpu.py (35 MB, signed)</text>
+<text x="1124" y="184.5" font-size="11" font-weight="400" fill="#475569" text-anchor="start">eval_planner.py (LLM vs rules agreement)</text>
+<rect x="170" y="272" width="268" height="140" rx="9" fill="#ffffff" stroke="#9aa6b8" stroke-width="1.25"/>
+<text x="182" y="294" font-size="13.5" font-weight="650" fill="#0f172a" text-anchor="start">Case runtime  (cases.py)</text>
+<text x="182" y="314.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">InvestigationRunner: one asyncio task</text>
+<text x="182" y="329.5" font-size="11" font-weight="400" fill="#475569" text-anchor="start">per case, independent of any browser</text>
+<text x="182" y="345.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">≤ 8 concurrent → 429 + Retry-After</text>
+<text x="182" y="360.5" font-size="11" font-weight="400" fill="#475569" text-anchor="start">CaseStore: cases + events (SQLite)</text>
+<text x="182" y="376.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">EventHub: versioned wake-ups</text>
+<text x="182" y="391.5" font-size="11" font-weight="400" fill="#475569" text-anchor="start">restart → running cases interrupted</text>
+<rect x="484" y="272" width="268" height="140" rx="9" fill="#ffffff" stroke="#334155" stroke-width="1.4"/>
+<text x="496" y="294" font-size="13.5" font-weight="650" fill="#0f172a" text-anchor="start">REST API  (api.py)</text>
+<text x="496" y="314.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">POST /register/check ?mode=sync|async</text>
+<text x="496" y="329.5" font-size="11" font-weight="400" fill="#475569" text-anchor="start">GET /registrations · /{id} · /{id}/result</text>
+<text x="496" y="345.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">GET /{id}/events?after=  (poll, rebuild)</text>
+<text x="496" y="360.5" font-size="11" font-weight="400" fill="#475569" text-anchor="start">GET /{id}/stream  (SSE, Last-Event-ID)</text>
+<text x="496" y="376.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">GET /health · /audit · /demo/scenarios</text>
+<text x="496" y="391.5" font-size="11" font-weight="400" fill="#475569" text-anchor="start">GET /ui/ (dashboard) · /docs (Swagger)</text>
+<rect x="798" y="272" width="268" height="140" rx="9" fill="#ffffff" stroke="#9aa6b8" stroke-width="1.25"/>
+<text x="810" y="294" font-size="13.5" font-weight="650" fill="#0f172a" text-anchor="start">Edge controls</text>
+<text x="810" y="314.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">Pydantic v2 schemas, extra=forbid</text>
+<text x="810" y="329.5" font-size="11" font-weight="400" fill="#475569" text-anchor="start">422 bodies never echo submitted values</text>
+<text x="810" y="345.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">Idempotency-Key: same case, or 409</text>
+<text x="810" y="360.5" font-size="11" font-weight="400" fill="#475569" text-anchor="start">ASGI headers: CSP, nosniff, no-cache</text>
+<text x="810" y="376.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">password validated, then discarded</text>
+<text x="810" y="391.5" font-size="11" font-weight="400" fill="#475569" text-anchor="start">names never leave the API layer</text>
+<rect x="1112" y="272" width="268" height="140" rx="9" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.25" stroke-dasharray="6 5"/>
+<text x="1124" y="294" font-size="13.5" font-weight="650" fill="#0f172a" text-anchor="start">Optional cloud LLM providers</text>
+<text x="1124" y="314.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">AnthropicProvider: official SDK,</text>
+<text x="1124" y="329.5" font-size="11" font-weight="400" fill="#475569" text-anchor="start">structured outputs (JSON schema)</text>
+<text x="1124" y="345.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">HuggingFaceProvider: router API</text>
+<text x="1124" y="360.5" font-size="11" font-weight="400" fill="#475569" text-anchor="start">Refused while ISOP_OFFLINE=true</text>
+<text x="1124" y="376.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">Never needed for the demo</text>
+<rect x="170" y="456" width="268" height="154" rx="9" fill="#ffffff" stroke="#9aa6b8" stroke-width="1.25"/>
+<text x="182" y="478" font-size="13.5" font-weight="650" fill="#0f172a" text-anchor="start">InvestigationService</text>
+<text x="182" y="498.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">orchestrator.py</text>
+<text x="182" y="513.5" font-size="11" font-weight="400" fill="#475569" text-anchor="start">1 baseline tools via asyncio.gather</text>
+<text x="182" y="529.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">2 planner loop: ≤ 3 turns, ≤ 4 follow-ups</text>
+<text x="182" y="544.5" font-size="11" font-weight="400" fill="#475569" text-anchor="start">validate: allowlist · entity · dedup · budget</text>
+<text x="182" y="560.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">tool arguments bound from the request</text>
+<text x="182" y="575.5" font-size="11" font-weight="400" fill="#475569" text-anchor="start">emit(type, stage, status, details)</text>
+<text x="182" y="591.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">policy → audit → case.completed</text>
+<rect x="484" y="456" width="268" height="154" rx="9" fill="#f4efff" stroke="#7c3aed" stroke-width="1.6"/>
+<text x="496" y="478" font-size="13.5" font-weight="650" fill="#0f172a" text-anchor="start">Investigation planner</text>
+<text x="496" y="498.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">planner.py</text>
+<text x="496" y="513.5" font-size="11" font-weight="400" fill="#475569" text-anchor="start">LlmPlanner: sanitised evidence lines</text>
+<text x="496" y="529.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">JSON-schema enum = remaining actions</text>
+<text x="496" y="544.5" font-size="11" font-weight="400" fill="#475569" text-anchor="start">30 s cooldown after an LLM failure</text>
+<text x="496" y="560.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">DeterministicPlanner: explicit rules</text>
+<text x="496" y="575.5" font-size="11" font-weight="400" fill="#475569" text-anchor="start">fallback labelled deterministic_fallback</text>
+<text x="496" y="591.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">never sees email, phone, IP, device</text>
+<rect x="798" y="456" width="268" height="154" rx="9" fill="#f4efff" stroke="#7c3aed" stroke-width="1.6"/>
+<text x="810" y="478" font-size="13.5" font-weight="650" fill="#0f172a" text-anchor="start">LLM provider layer</text>
+<text x="810" y="498.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">llm/ (provider-neutral contract)</text>
+<text x="810" y="513.5" font-size="11" font-weight="400" fill="#475569" text-anchor="start">OllamaProvider → POST /api/chat</text>
+<text x="810" y="529.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">format = JSON schema (constrained)</text>
+<text x="810" y="544.5" font-size="11" font-weight="400" fill="#475569" text-anchor="start">temperature 0 · fixed seed · 256 tokens</text>
+<text x="810" y="560.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">hard 45 s deadline per call</text>
+<text x="810" y="575.5" font-size="11" font-weight="400" fill="#475569" text-anchor="start">loopback-only while offline</text>
+<text x="810" y="591.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">health(): reachable, model present</text>
+<rect x="1112" y="456" width="268" height="154" rx="9" fill="#f4efff" stroke="#7c3aed" stroke-width="1.6"/>
+<text x="1124" y="478" font-size="13.5" font-weight="650" fill="#0f172a" text-anchor="start">Ollama 0.40.10  (CPU backend)</text>
+<text x="1124" y="498.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">separate local process</text>
+<text x="1124" y="513.5" font-size="11" font-weight="400" fill="#475569" text-anchor="start">127.0.0.1:11434</text>
+<text x="1124" y="529.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">Qwen2.5-3B-Instruct GGUF · Q4_K_M · 2 GB</text>
+<text x="1124" y="544.5" font-size="11" font-weight="400" fill="#475569" text-anchor="start">from the Hugging Face Hub (hf.co/Qwen)</text>
+<text x="1124" y="560.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">median ~7 s per planning turn</text>
+<text x="1124" y="575.5" font-size="11" font-weight="400" fill="#475569" text-anchor="start">never pulls models at runtime</text>
+<text x="1124" y="591.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">keep_alive 30 min (warm model)</text>
+<rect x="170" y="654" width="268" height="146" rx="9" fill="#ecfaf5" stroke="#0f8a63" stroke-width="1.4"/>
+<text x="182" y="676" font-size="13.5" font-weight="650" fill="#0f172a" text-anchor="start">MCP client  (tool_client.py)</text>
+<text x="182" y="696.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">mcp 2.3 Client, one long-lived session</text>
+<text x="182" y="711.5" font-size="11" font-weight="400" fill="#475569" text-anchor="start">3 s timeout per tool call</text>
+<text x="182" y="727.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">output → ProviderResult schema check</text>
+<text x="182" y="742.5" font-size="11" font-weight="400" fill="#475569" text-anchor="start">reason codes ^[A-Z0-9_]{1,64}$ only</text>
+<text x="182" y="758.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">error / timeout → non-SUCCESS signal</text>
+<rect x="484" y="654" width="268" height="146" rx="9" fill="#ecfaf5" stroke="#0f8a63" stroke-width="1.4"/>
+<text x="496" y="676" font-size="13.5" font-weight="650" fill="#0f172a" text-anchor="start">MCP server  isop-signals</text>
+<text x="496" y="696.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">subprocess: python -m isop.mcp_server</text>
+<text x="496" y="711.5" font-size="11" font-weight="400" fill="#475569" text-anchor="start">6 read-only tools, args re-validated</text>
+<text x="496" y="727.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">baseline: email · phone · IP · device</text>
+<text x="496" y="742.5" font-size="11" font-weight="400" fill="#475569" text-anchor="start">follow-up: device / registration history</text>
+<text x="496" y="758.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">mock providers → simulated: true</text>
+<rect x="798" y="654" width="268" height="146" rx="9" fill="#e8f0ff" stroke="#2563eb" stroke-width="2.4"/>
+<text x="810" y="676" font-size="13.5" font-weight="650" fill="#0f172a" text-anchor="start">Deterministic policy engine</text>
+<text x="810" y="696.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">policy.py + config/policy.json</text>
+<text x="810" y="711.5" font-size="11" font-weight="400" fill="#475569" text-anchor="start">version reg-policy-2026.11.1</text>
+<text x="810" y="727.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">R000–R008 · weighted composite score</text>
+<text x="810" y="742.5" font-size="11" font-weight="400" fill="#475569" text-anchor="start">R001 required signals · R008 follow-ups</text>
+<rect x="816" y="766" width="70" height="22" rx="5" fill="#e7f6ec" stroke="#15803d" stroke-width="1.2"/>
+<text x="851" y="781" font-size="11" font-weight="700" fill="#15803d" text-anchor="middle">ALLOW</text>
+<rect x="894" y="766" width="70" height="22" rx="5" fill="#fff4dd" stroke="#b45309" stroke-width="1.2"/>
+<text x="929" y="781" font-size="11" font-weight="700" fill="#b45309" text-anchor="middle">REVIEW</text>
+<rect x="972" y="766" width="70" height="22" rx="5" fill="#fde8e7" stroke="#c2261d" stroke-width="1.2"/>
+<text x="1007" y="781" font-size="11" font-weight="700" fill="#c2261d" text-anchor="middle">REJECT</text>
+<rect x="1112" y="654" width="268" height="146" rx="9" fill="#fff8eb" stroke="#c27a12" stroke-width="1.4"/>
+<text x="1124" y="676" font-size="13.5" font-weight="650" fill="#0f172a" text-anchor="start">Audit trail  (audit.py)</text>
+<text x="1124" y="696.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">AuditTrace per case, stored as JSON</text>
+<text x="1124" y="711.5" font-size="11" font-weight="400" fill="#475569" text-anchor="start">email a***@domain · IP /24 network</text>
+<text x="1124" y="727.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">phone +14******99 · device sha256:…</text>
+<text x="1124" y="742.5" font-size="11" font-weight="400" fill="#475569" text-anchor="start">no passwords, names or raw IDs</text>
+<text x="1124" y="758.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">GET /audit · /audit/{id}</text>
+<rect x="170" y="842" width="582" height="96" rx="9" fill="#ffffff" stroke="#9aa6b8" stroke-width="1.25"/>
+<text x="182" y="864" font-size="13.5" font-weight="650" fill="#0f172a" text-anchor="start">Configuration &amp; environment</text>
+<text x="182" y="884.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">.env + environment → Settings (frozen; API keys hidden from repr) · .env.example has no secrets</text>
+<text x="182" y="899.5" font-size="11" font-weight="400" fill="#475569" text-anchor="start">LLM_PROVIDER=ollama · LLM_FALLBACK=deterministic · ISOP_OFFLINE=true · LLM_TIMEOUT_S=45</text>
+<text x="182" y="915.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">Python 3.12 venv · pinned requirements.txt · offline wheel cache vendor/wheels</text>
+<rect x="798" y="842" width="582" height="96" rx="9" fill="#fff8eb" stroke="#c27a12" stroke-width="1.4"/>
+<text x="810" y="864" font-size="13.5" font-weight="650" fill="#0f172a" text-anchor="start">SQLite database  var/audit.db  (WAL)</text>
+<text x="810" y="884.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">registration_case: status, decision, planner mode, idempotency key, payload hash (no password)</text>
+<text x="810" y="899.5" font-size="11" font-weight="400" fill="#475569" text-anchor="start">case_event: event_id, seq, type, stage, status, ts, sanitised details</text>
+<text x="810" y="915.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">audit_trace: masked AuditTrace JSON per case</text>
+<path d="M618.0 224 V272" fill="none" stroke="#8a97ab" stroke-width="1.5" marker-start="url(#tech-a)" marker-end="url(#tech-a)"/>
+<text x="626.0" y="252" font-size="11" font-weight="600" fill="#475569" text-anchor="start">HTTP JSON  ·  SSE</text>
+<path d="M932.0 224 V272" fill="none" stroke="#8a97ab" stroke-width="1.5" marker-end="url(#tech-a)"/>
+<text x="940.0" y="252" font-size="11" font-weight="600" fill="#475569" text-anchor="start">HTTP</text>
+<path d="M798 342 H752" fill="none" stroke="#8a97ab" stroke-width="1.5" marker-start="url(#tech-a)" marker-end="url(#tech-a)"/>
+<path d="M484 342 H438" fill="none" stroke="#8a97ab" stroke-width="1.5" marker-end="url(#tech-a)"/>
+<text x="461" y="334" font-size="10.5" font-weight="600" fill="#475569" text-anchor="middle">start</text>
+<path d="M240 412 V456" fill="none" stroke="#8a97ab" stroke-width="1.5" marker-end="url(#tech-a)"/>
+<text x="248" y="438" font-size="10.5" font-weight="600" fill="#475569" text-anchor="start">execute(case)</text>
+<path d="M370 456 V412" fill="none" stroke="#8a97ab" stroke-width="1.5" marker-end="url(#tech-a)"/>
+<text x="378" y="438" font-size="10.5" font-weight="600" fill="#475569" text-anchor="start">emit(event)</text>
+<path d="M438 530 H484" fill="none" stroke="#8a97ab" stroke-width="1.5" marker-start="url(#tech-a)" marker-end="url(#tech-a)"/>
+<text x="461" y="522" font-size="10.5" font-weight="600" fill="#475569" text-anchor="middle">plan()</text>
+<path d="M752 530 H798" fill="none" stroke="#8a97ab" stroke-width="1.5" marker-start="url(#tech-a)" marker-end="url(#tech-a)"/>
+<text x="775" y="522" font-size="10.5" font-weight="600" fill="#475569" text-anchor="middle">JSON</text>
+<path d="M1066 530 H1112" fill="none" stroke="#8a97ab" stroke-width="1.5" marker-start="url(#tech-a)" marker-end="url(#tech-a)"/>
+<text x="1089" y="522" font-size="10.5" font-weight="600" fill="#475569" text-anchor="middle">HTTP</text>
+<path d="M1036 456 V432 H1246.0 V412" fill="none" stroke="#8a97ab" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#tech-a)"/>
+<text x="1118" y="427" font-size="10.5" font-weight="700" fill="#c2261d" text-anchor="start">✕ blocked offline</text>
+<path d="M304.0 610 V654" fill="none" stroke="#8a97ab" stroke-width="1.5" marker-end="url(#tech-a)"/>
+<text x="312.0" y="634" font-size="10.5" font-weight="600" fill="#475569" text-anchor="start">call(tool, args)</text>
+<path d="M438 726 H484" fill="none" stroke="#8a97ab" stroke-width="1.5" marker-start="url(#tech-a)" marker-end="url(#tech-a)"/>
+<text x="461" y="718" font-size="10.5" font-weight="600" fill="#475569" text-anchor="middle">stdio</text>
+<path d="M418 610 V630 H932.0 V654" fill="none" stroke="#8a97ab" stroke-width="1.5" marker-end="url(#tech-a)"/>
+<path d="M932.0 630 H1246.0 V654" fill="none" stroke="#8a97ab" stroke-width="1.5" marker-end="url(#tech-a)"/>
+<text x="924.0" y="626" font-size="10.5" font-weight="600" fill="#475569" text-anchor="end">evaluate(signals)</text>
+<text x="1238.0" y="626" font-size="10.5" font-weight="600" fill="#475569" text-anchor="end">record(trace)</text>
+<path d="M1246.0 800 V842" fill="none" stroke="#8a97ab" stroke-width="1.5" marker-end="url(#tech-a)"/>
+<text x="1254.0" y="824" font-size="10.5" font-weight="600" fill="#475569" text-anchor="start">INSERT</text>
+<rect x="20" y="966" width="22" height="13" rx="3" fill="#ffffff" stroke="#334155" stroke-width="1.4"/>
+<text x="50" y="977" font-size="11.5" font-weight="400" fill="#475569" text-anchor="start">Client / API</text>
+<rect x="157" y="966" width="22" height="13" rx="3" fill="#f4efff" stroke="#7c3aed" stroke-width="1.6"/>
+<text x="187" y="977" font-size="11.5" font-weight="400" fill="#475569" text-anchor="start">AI planning (advises only)</text>
+<rect x="386" y="966" width="22" height="13" rx="3" fill="#ecfaf5" stroke="#0f8a63" stroke-width="1.4"/>
+<text x="416" y="977" font-size="11.5" font-weight="400" fill="#475569" text-anchor="start">MCP tool layer</text>
+<rect x="536" y="966" width="22" height="13" rx="3" fill="#e8f0ff" stroke="#2563eb" stroke-width="2.4"/>
+<text x="566" y="977" font-size="11.5" font-weight="400" fill="#475569" text-anchor="start">Decision owner</text>
+<rect x="686" y="966" width="22" height="13" rx="3" fill="#fff8eb" stroke="#c27a12" stroke-width="1.4"/>
+<text x="716" y="977" font-size="11.5" font-weight="400" fill="#475569" text-anchor="start">Persistence</text>
+<rect x="816" y="966" width="22" height="13" rx="3" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.25" stroke-dasharray="6 5"/>
+<text x="846" y="977" font-size="11.5" font-weight="400" fill="#475569" text-anchor="start">Optional, off in offline mode</text>
+</svg>

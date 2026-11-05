@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1114 812" width="1114" height="812" role="img" aria-label="ISOP high-level architecture" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif">
+<title>ISOP high-level architecture</title>
+<defs>
+  <marker id="hl-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#8a97ab"/></marker>
+  <marker id="hl-b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#2563eb"/></marker>
+</defs>
+<rect width="1114" height="812" fill="#ffffff"/>
+<text x="30" y="38" font-size="19" font-weight="700" fill="#0f172a" text-anchor="start">ISOP at a glance: the AI plans the investigation, a deterministic policy decides</text>
+<text x="30" y="62" font-size="12.5" font-weight="400" fill="#475569" text-anchor="start">Registration fraud pre-check running entirely on one laptop. Numbered arrows follow one registration.</text>
+<rect x="232" y="86" width="676" height="560" rx="14" fill="#f6f8fb" stroke="#64748b" stroke-width="1.4" stroke-dasharray="7 5"/>
+<text x="250" y="108" font-size="11" font-weight="700" fill="#475569" text-anchor="start">ONE LAPTOP · FULLY OFFLINE · 127.0.0.1</text>
+<rect x="24" y="270" width="170" height="96" rx="9" fill="#ffffff" stroke="#334155" stroke-width="1.4"/>
+<text x="36" y="292" font-size="13.5" font-weight="650" fill="#0f172a" text-anchor="start">User / analyst</text>
+<text x="36" y="312.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">Web browser</text>
+<text x="36" y="327.5" font-size="11" font-weight="400" fill="#475569" text-anchor="start">Registration dashboard</text>
+<text x="36" y="343.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">Swagger UI (API docs)</text>
+<rect x="256" y="124" width="286" height="92" rx="9" fill="#ffffff" stroke="#334155" stroke-width="1.4"/>
+<text x="268" y="146" font-size="13.5" font-weight="650" fill="#0f172a" text-anchor="start">Dashboard &amp; REST API</text>
+<text x="268" y="166.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">Registration form, live orchestration view,</text>
+<text x="268" y="181.5" font-size="11" font-weight="400" fill="#475569" text-anchor="start">investigation history  ·  FastAPI service</text>
+<rect x="600" y="124" width="286" height="92" rx="9" fill="#fff8eb" stroke="#c27a12" stroke-width="1.4"/>
+<text x="612" y="146" font-size="13.5" font-weight="650" fill="#0f172a" text-anchor="start">Case &amp; audit store</text>
+<text x="612" y="166.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">Every investigation step stored as an event;</text>
+<text x="612" y="181.5" font-size="11" font-weight="400" fill="#475569" text-anchor="start">masked audit trail per case  ·  SQLite</text>
+<rect x="256" y="276" width="286" height="104" rx="9" fill="#ffffff" stroke="#9aa6b8" stroke-width="1.25"/>
+<text x="268" y="298" font-size="13.5" font-weight="650" fill="#0f172a" text-anchor="start">Registration orchestrator</text>
+<text x="268" y="318.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">Runs mandatory checks, asks the planner</text>
+<text x="268" y="333.5" font-size="11" font-weight="400" fill="#475569" text-anchor="start">for follow-ups, validates every step,</text>
+<text x="268" y="349.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">fills in tool arguments itself</text>
+<rect x="600" y="276" width="286" height="104" rx="9" fill="#f4efff" stroke="#7c3aed" stroke-width="1.6"/>
+<text x="612" y="298" font-size="13.5" font-weight="650" fill="#0f172a" text-anchor="start">AI investigation planner</text>
+<rect x="813" y="285" width="63" height="18" rx="9" fill="#7c3aed" fill-opacity="0.14"/>
+<text x="844.5" y="298" font-size="10" font-weight="700" fill="#7c3aed" text-anchor="middle">ADVISES</text>
+<text x="612" y="318.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">Local LLM: Qwen2.5-3B-Instruct from the</text>
+<text x="612" y="333.5" font-size="11" font-weight="400" fill="#475569" text-anchor="start">Hugging Face Hub, run by Ollama. Chooses</text>
+<text x="612" y="349.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">which follow-up checks are worth running.</text>
+<text x="612" y="364.5" font-size="11" font-weight="400" fill="#475569" text-anchor="start">Advises only; never decides.</text>
+<rect x="256" y="440" width="286" height="104" rx="9" fill="#ecfaf5" stroke="#0f8a63" stroke-width="1.4"/>
+<text x="268" y="462" font-size="13.5" font-weight="650" fill="#0f172a" text-anchor="start">MCP tool server</text>
+<text x="268" y="482.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">Governed, read-only risk-signal tools:</text>
+<text x="268" y="497.5" font-size="11" font-weight="400" fill="#475569" text-anchor="start">email, phone, IP, device, device history,</text>
+<text x="268" y="513.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">registration history</text>
+<rect x="600" y="440" width="286" height="126" rx="9" fill="#e8f0ff" stroke="#2563eb" stroke-width="2.4"/>
+<text x="612" y="462" font-size="13.5" font-weight="650" fill="#0f172a" text-anchor="start">Deterministic policy engine</text>
+<rect x="813" y="449" width="63" height="18" rx="9" fill="#2563eb" fill-opacity="0.14"/>
+<text x="844.5" y="462" font-size="10" font-weight="700" fill="#2563eb" text-anchor="middle">DECIDES</text>
+<text x="612" y="482.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">Versioned rules (R000–R008) turn the</text>
+<text x="612" y="497.5" font-size="11" font-weight="400" fill="#475569" text-anchor="start">evidence into the final decision.</text>
+<text x="612" y="513.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">Same evidence → same decision.</text>
+<rect x="628" y="534" width="70" height="22" rx="5" fill="#e7f6ec" stroke="#15803d" stroke-width="1.2"/>
+<text x="663" y="549" font-size="11" font-weight="700" fill="#15803d" text-anchor="middle">ALLOW</text>
+<rect x="706" y="534" width="70" height="22" rx="5" fill="#fff4dd" stroke="#b45309" stroke-width="1.2"/>
+<text x="741" y="549" font-size="11" font-weight="700" fill="#b45309" text-anchor="middle">REVIEW</text>
+<rect x="784" y="534" width="70" height="22" rx="5" fill="#fde8e7" stroke="#c2261d" stroke-width="1.2"/>
+<text x="819" y="549" font-size="11" font-weight="700" fill="#c2261d" text-anchor="middle">REJECT</text>
+<rect x="256" y="578" width="286" height="52" rx="9" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.25" stroke-dasharray="6 5"/>
+<text x="268" y="600" font-size="13.5" font-weight="650" fill="#0f172a" text-anchor="start">Simulated signal providers</text>
+<text x="268" y="620.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">Deterministic demo data · labelled simulated</text>
+<rect x="940" y="284" width="150" height="88" rx="9" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.25" stroke-dasharray="6 5"/>
+<text x="952" y="306" font-size="13.5" font-weight="650" fill="#0f172a" text-anchor="start">Optional cloud LLMs</text>
+<text x="952" y="326.0" font-size="11" font-weight="400" fill="#475569" text-anchor="start">Anthropic, Hugging Face</text>
+<text x="952" y="341.5" font-size="11" font-weight="400" fill="#475569" text-anchor="start">Blocked while offline</text>
+<path d="M194 292 H214 V160 H256" fill="none" stroke="#8a97ab" stroke-width="1.5" marker-end="url(#hl-a)"/>
+<path d="M256 186 H226 V346 H194" fill="none" stroke="#2563eb" stroke-width="1.5" marker-end="url(#hl-b)"/>
+<path d="M399 216 V276" fill="none" stroke="#8a97ab" stroke-width="1.5" marker-end="url(#hl-a)"/>
+<path d="M399 380 V440" fill="none" stroke="#8a97ab" stroke-width="1.5" marker-start="url(#hl-a)" marker-end="url(#hl-a)"/>
+<path d="M542 328 H600" fill="none" stroke="#8a97ab" stroke-width="1.5" marker-start="url(#hl-a)" marker-end="url(#hl-a)"/>
+<path d="M542 360 H572 V502 H600" fill="none" stroke="#8a97ab" stroke-width="1.5" marker-end="url(#hl-a)"/>
+<path d="M542 296 H566 V170 H600" fill="none" stroke="#8a97ab" stroke-width="1.5" marker-end="url(#hl-a)"/>
+<path d="M399 544 V578" fill="none" stroke="#8a97ab" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#hl-a)"/>
+<path d="M886 328 H940" fill="none" stroke="#8a97ab" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#hl-a)"/>
+<circle cx="214" cy="240" r="10" fill="#2563eb"/><text x="214" y="244" font-size="11" font-weight="700" fill="#ffffff" text-anchor="middle">1</text>
+<circle cx="412" cy="246" r="10" fill="#2563eb"/><text x="412" y="250" font-size="11" font-weight="700" fill="#ffffff" text-anchor="middle">2</text>
+<circle cx="412" cy="410" r="10" fill="#2563eb"/><text x="412" y="414" font-size="11" font-weight="700" fill="#ffffff" text-anchor="middle">3</text>
+<circle cx="571" cy="316" r="10" fill="#2563eb"/><text x="571" y="320" font-size="11" font-weight="700" fill="#ffffff" text-anchor="middle">4</text>
+<circle cx="586" cy="462" r="10" fill="#2563eb"/><text x="586" y="466" font-size="11" font-weight="700" fill="#ffffff" text-anchor="middle">5</text>
+<circle cx="583" cy="236" r="10" fill="#2563eb"/><text x="583" y="240" font-size="11" font-weight="700" fill="#ffffff" text-anchor="middle">6</text>
+<circle cx="226" cy="300" r="10" fill="#2563eb"/><text x="226" y="304" font-size="11" font-weight="700" fill="#ffffff" text-anchor="middle">7</text>
+<text x="912" y="318" font-size="14" font-weight="700" fill="#c2261d" text-anchor="middle">✕</text>
+<rect x="24" y="672" width="1066" height="118" rx="10" fill="#ffffff" stroke="#d5dbe5"/>
+<text x="40" y="694" font-size="13" font-weight="700" fill="#0f172a" text-anchor="start">How one registration flows</text>
+<text x="40" y="718" font-size="12" font-weight="400" fill="#475569" text-anchor="start">1  Submit a registration (case ID returned at once)</text>
+<text x="40" y="736" font-size="12" font-weight="400" fill="#475569" text-anchor="start">2  Investigation starts as a server-side task</text>
+<text x="40" y="754" font-size="12" font-weight="400" fill="#475569" text-anchor="start">3  Mandatory checks, then any follow-ups, via MCP</text>
+<text x="40" y="772" font-size="12" font-weight="400" fill="#475569" text-anchor="start">4  Planner reads the evidence, picks follow-ups</text>
+<text x="560" y="718" font-size="12" font-weight="400" fill="#475569" text-anchor="start">5  Policy evaluates all evidence → decision</text>
+<text x="560" y="736" font-size="12" font-weight="400" fill="#475569" text-anchor="start">6  Each step saved as an event + masked audit</text>
+<text x="560" y="754" font-size="12" font-weight="400" fill="#475569" text-anchor="start">7  Dashboard streams progress live (SSE)</text>
+<rect x="850" y="688" width="22" height="13" rx="3" fill="#f4efff" stroke="#7c3aed" stroke-width="1.6"/>
+<text x="880" y="699" font-size="11.5" font-weight="400" fill="#475569" text-anchor="start">AI component (advises)</text>
+<rect x="850" y="707" width="22" height="13" rx="3" fill="#e8f0ff" stroke="#2563eb" stroke-width="2.4"/>
+<text x="880" y="718" font-size="11.5" font-weight="400" fill="#475569" text-anchor="start">Decision owner</text>
+<rect x="850" y="726" width="22" height="13" rx="3" fill="#ecfaf5" stroke="#0f8a63" stroke-width="1.4"/>
+<text x="880" y="737" font-size="11.5" font-weight="400" fill="#475569" text-anchor="start">Tool layer</text>
+<rect x="850" y="745" width="22" height="13" rx="3" fill="#fff8eb" stroke="#c27a12" stroke-width="1.4"/>
+<text x="880" y="756" font-size="11.5" font-weight="400" fill="#475569" text-anchor="start">Storage</text>
+<rect x="850" y="764" width="22" height="13" rx="3" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.25" stroke-dasharray="6 5"/>
+<text x="880" y="775" font-size="11.5" font-weight="400" fill="#475569" text-anchor="start">Simulated / optional</text>
+</svg>

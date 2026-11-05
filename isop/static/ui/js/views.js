@@ -1,7 +1,7 @@
 // @ts-check
 /** Render functions: state in, DOM out. Stateless; `morph` applies the result to the page. */
 import { clock, dateTime, duration, h, icon } from "./dom.js";
-import { toolLabel } from "./model.js";
+import { prettyModel, toolLabel } from "./model.js";
 import { state } from "./store.js";
 
 /** @typedef {import("./store.js").TrackedCase} TrackedCase */
@@ -59,7 +59,7 @@ function toolChip(t) {
 /** @param {any} t */
 function turnBlock(t) {
   const mode = t.mode || "running";
-  const who = t.mode === "llm" ? `${t.provider} · ${t.model}` : t.mode === "deterministic_fallback"
+  const who = t.mode === "llm" ? `${t.provider} · ${prettyModel(t.model)}` : t.mode === "deterministic_fallback"
     ? `fallback rules (LLM: ${t.llmStatus || "error"})` : t.mode === "deterministic" ? "deterministic rules" : t.provider;
   return h("div", { class: "turn", dataset: { key: `turn-${t.iteration}` } },
     h("div", { class: "turn-head" },
@@ -203,7 +203,7 @@ export function decisionCard(c, v) {
       h("dt", null, "MCP tools invoked"), h("dd", null, String(d.tools_invoked)),
       h("dt", null, "Signals evaluated"), h("dd", null, String(d.signals_evaluated)),
       h("dt", null, "Planner"), h("dd", null, modeBadge(d.planner_mode), " ",
-        d.llm_provider === "deterministic" ? "deterministic rules (no LLM)" : `${d.llm_provider}${d.llm_model ? ` · ${d.llm_model}` : ""} · ${d.llm_calls} LLM call${d.llm_calls === 1 ? "" : "s"}${d.fallback_used ? " · fallback used" : ""}`),
+        d.llm_provider === "deterministic" ? "deterministic rules (no LLM)" : `${d.llm_provider}${d.llm_model ? ` · ${prettyModel(d.llm_model)}` : ""} · ${d.llm_calls} LLM call${d.llm_calls === 1 ? "" : "s"}${d.fallback_used ? " · fallback used" : ""}`),
       h("dt", null, "Policy"), h("dd", null, d.policy_version),
       h("dt", null, "Evidence"), h("dd", null, d.simulated_signals ? "Simulated providers (demo data)" : "Provider data")),
     h("div", { class: "decision-codes" }, h("span", { class: "label" }, "Policy reason codes"),

@@ -14,6 +14,7 @@ from urllib.parse import urlparse
 
 import httpx
 
+from isop.config import model_source
 from isop.llm.base import LlmError
 
 LOOPBACK_HOSTS = {"127.0.0.1", "localhost", "::1", "[::1]"}
@@ -85,13 +86,15 @@ class OllamaProvider:
             version = (await self._http.get("/api/version", timeout=3.0)).json().get("version")
             tags = (await self._http.get("/api/tags", timeout=3.0)).json().get("models", [])
         except (httpx.HTTPError, ValueError):
-            return {"provider": self.name, "reachable": False, "model": self.model, "model_present": False}
+            return {"provider": self.name, "reachable": False, "model": self.model,
+                    "model_source": model_source(self.model), "model_present": False}
         names = {m.get("name") for m in tags} | {m.get("model") for m in tags}
         return {
             "provider": self.name,
             "reachable": True,
             "version": version,
             "model": self.model,
+            "model_source": model_source(self.model),
             "model_present": self.model in names or f"{self.model}:latest" in names,
             "probe_ms": round((time.perf_counter() - started) * 1000, 1),
         }

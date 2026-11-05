@@ -13,12 +13,13 @@ import pytest
 from fastapi.testclient import TestClient
 
 from isop.api import create_app
+from isop.config import Settings
 from isop.llm import OllamaProvider
 from isop.planner import plan_schema
 from tests.conftest import make_settings, payload
 
 BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434")
-MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5:3b")
+MODEL = os.getenv("OLLAMA_MODEL", Settings().ollama_model)
 
 
 def _ready() -> bool:

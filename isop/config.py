@@ -41,7 +41,8 @@ class Settings:
     offline: bool = True  # refuse cloud providers and non-loopback model endpoints
 
     ollama_base_url: str = "http://127.0.0.1:11434"
-    ollama_model: str = "qwen2.5:3b"
+    # Official Qwen GGUF from the Hugging Face Hub, run locally by Ollama (pulled once; offline afterwards).
+    ollama_model: str = "hf.co/Qwen/Qwen2.5-3B-Instruct-GGUF:Q4_K_M"
     ollama_num_ctx: int = 4096
     ollama_keep_alive: str = "30m"
 
@@ -103,5 +104,14 @@ class Settings:
         """Configuration safe to expose on /health (no secrets)."""
         model = {"ollama": self.ollama_model, "anthropic": self.anthropic_model,
                  "huggingface": self.hf_model}.get(self.llm_provider)
-        return {"llm_provider": self.llm_provider, "model": model, "llm_fallback": self.llm_fallback,
-                "offline": self.offline, "tool_transport": self.tool_transport}
+        source = {"anthropic": "Anthropic API (cloud)", "huggingface": "Hugging Face Inference API (cloud)",
+                  "deterministic": None}.get(self.llm_provider, model_source(self.ollama_model))
+        return {"llm_provider": self.llm_provider, "model": model, "model_source": source,
+                "llm_fallback": self.llm_fallback, "offline": self.offline, "tool_transport": self.tool_transport}
+
+
+def model_source(ollama_model: str) -> str:
+    """Where a locally run Ollama model was obtained from (shown in the UI and audit metadata)."""
+    if ollama_model.startswith(("hf.co/", "huggingface.co/")):
+        return "Hugging Face Hub (run locally)"
+    return "Ollama library (run locally)"
